@@ -70,6 +70,20 @@ with st.sidebar:
     target_q_leads = st.number_input("Target Qualified Leads", value=100)
     target_revenue = st.number_input("Target Pipeline Revenue ($)", value=50000)
     target_authority = st.number_input("Target Authority Score", value=60)
+    
+    st.markdown("---")
+    st.header("⚙️ Admin Tools")
+    if st.button("Force Sync / Rebuild Data", help="Wipes the local database and generates fresh data from APIs (or fallback engines)."):
+        import subprocess
+        import sys
+        if os.path.exists("growth_data.db"):
+            os.remove("growth_data.db")
+        from database.db_manager import init_db
+        init_db()
+        subprocess.run([sys.executable, "scripts/backfill_history.py"])
+        subprocess.run([sys.executable, "scripts/backfill_semrush.py"])
+        st.success("Data rebuilt! Refreshing...")
+        st.rerun()
 
 # --- FUNCTIONAL TABS ---
 tab1, tab2, tab3, tab4, tab5 = st.tabs(["Executive Scorecard", "Action Register", "Reports", "Data Sources", "Data Ingestion"])
