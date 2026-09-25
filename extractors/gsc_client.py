@@ -118,29 +118,29 @@ def get_gsc_queries_data(start_date, end_date):
         try:
             from googleapiclient.discovery import build
             service = build('searchconsole', 'v1', credentials=credentials)
-        
-        request = {
-            'startDate': start_date,
-            'endDate': end_date,
-            'dimensions': ['date', 'query'],
-            'rowLimit': 5000
-        }
-        
-        response = service.searchanalytics().query(siteUrl=GSC_SITE_URL, body=request).execute()
-        
-        data = []
-        if 'rows' in response:
-            for row in response['rows']:
-                data.append({
-                    "date": row['keys'][0],
-                    "query": row['keys'][1],
-                    "clicks": row['clicks'],
-                    "impressions": row['impressions']
-                })
-                
-        return pd.DataFrame(data)
-    except Exception as e:
-        print(f"Error fetching queries GSC data: {e}")
+            
+            request = {
+                'startDate': start_date,
+                'endDate': end_date,
+                'dimensions': ['date', 'query'],
+                'rowLimit': 5000
+            }
+            
+            response = service.searchanalytics().query(siteUrl=GSC_SITE_URL, body=request).execute()
+            
+            data = []
+            if 'rows' in response:
+                for row in response['rows']:
+                    data.append({
+                        "date": row['keys'][0],
+                        "query": row['keys'][1],
+                        "clicks": row['clicks'],
+                        "impressions": row['impressions']
+                    })
+                    
+            return pd.DataFrame(data)
+        except Exception as e:
+            print(f"Error fetching queries GSC data: {e}")
 
     # --- FALLBACK ---
     from datetime import datetime, timedelta
