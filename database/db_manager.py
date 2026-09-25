@@ -1,11 +1,22 @@
-import sqlite3
 import pandas as pd
 import os
+import streamlit as st
+import psycopg2
+import urllib.parse
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "growth_data.db")
+try:
+    if 'SUPABASE_URI' in st.secrets:
+        SUPABASE_URI = st.secrets['SUPABASE_URI']
+    else:
+        password = urllib.parse.quote_plus('Abc@123!Inspiria-Growth-Agent')
+        SUPABASE_URI = f'postgresql://postgres.xvtmffdkyiyxetczyvwe:{password}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+except:
+    password = urllib.parse.quote_plus('Abc@123!Inspiria-Growth-Agent')
+    SUPABASE_URI = f'postgresql://postgres.xvtmffdkyiyxetczyvwe:{password}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
 
 def get_connection():
-    return sqlite3.connect(DB_PATH)
+    return psycopg2.connect(SUPABASE_URI)
+
 
 def init_db():
     """Initializes the SQLite database with tables for GA4, GSC, and Social daily metrics."""
@@ -77,7 +88,7 @@ def init_db():
     # Table for Action Register (Tasks)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS action_register (
-        task_id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id SERIAL PRIMARY KEY,
         task_name TEXT,
         status TEXT,
         priority TEXT,
@@ -115,7 +126,7 @@ def upsert_ga4_data(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO ga4_daily (date, sessions, active_users, conversions, pageviews)
-        VALUES (?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
             sessions=excluded.sessions,
             active_users=excluded.active_users,
@@ -132,7 +143,7 @@ def upsert_ga4_channels(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO ga4_channels (date, channel, sessions)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
         ON CONFLICT(date, channel) DO UPDATE SET sessions=excluded.sessions
         ''', (row['date'], str(row['sessionDefaultChannelGroup']), int(row['sessions'])))
     conn.commit()
@@ -153,7 +164,7 @@ def upsert_gsc_data(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO gsc_daily (date, clicks, impressions)
-        VALUES (?, ?, ?)
+        VALUES (%s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
             clicks=excluded.clicks,
             impressions=excluded.impressions
@@ -168,7 +179,7 @@ def upsert_gsc_queries(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO gsc_queries (date, query, clicks, impressions)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
         ON CONFLICT(date, query) DO UPDATE SET
             clicks=excluded.clicks,
             impressions=excluded.impressions
@@ -191,7 +202,7 @@ def upsert_social_data(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO social_daily (date, total_followers, daily_reach, daily_engagement)
-        VALUES (?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
             total_followers=excluded.total_followers,
             daily_reach=excluded.daily_reach,
@@ -207,28 +218,30 @@ def upsert_crm_conversions(df):
     for _, row in df.iterrows():
         conn.execute('''
         INSERT INTO crm_conversions (conversion_id, date, landing_page, source, qualified, customer, revenue)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT(conversion_id) DO UPDATE SET
             qualified=excluded.qualified, customer=excluded.customer, revenue=excluded.revenue
-        ''', (str(row.get('Conversion ID', '')), str(row.get('Conversion Date', '')), str(row.get('Landing Page', '')), str(row.get('Source', '')), str(row.get('Qualified?', '')), str(row.get('Customer?', '')), float(row.get('Revenue / Pipeline Value', 0))))
+        ''', (str(row.get('Conversion ID', '')), str(row.get('Conversion Date', '')), str(row.get('Landing Page', '')), str(row.get('Source', '')), str(row.get('Qualified%s', '')), str(row.get('Customer%s', '')), float(row.get('Revenue / Pipeline Value', 0))))
     conn.commit()
     conn.close()
 
 def add_action_task(task_name, priority):
     conn = get_connection()
-    conn.execute("INSERT INTO action_register (task_name, status, priority, created_at) VALUES (?, 'Planned', ?, date('now'))", (task_name, priority))
+    conn.execute("INSERT INTO action_register (task_name, status, priority, created_at) VALUES (%s, 'Planned', %s, CURRENT_DATE)", (task_name, priority))
     conn.commit()
     conn.close()
 
 def get_action_tasks():
     conn = get_connection()
-    df = pd.read_sql_query("SELECT * FROM action_register ORDER BY task_id DESC", conn)
+    from sqlalchemy import create_engine
+    engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+    df = pd.read_sql_query("SELECT * FROM action_register ORDER BY task_id DESC", engine)
     conn.close()
     return df
 
 def update_action_task(task_id, status):
     conn = get_connection()
-    conn.execute("UPDATE action_register SET status = ? WHERE task_id = ?", (status, task_id))
+    conn.execute("UPDATE action_register SET status = %s WHERE task_id = %s", (status, task_id))
     conn.commit()
     conn.close()
 
@@ -238,7 +251,7 @@ def upsert_semrush_data(df):
     for _, row in df.iterrows():
         cursor.execute('''
         INSERT INTO semrush_daily (date, authority_score, total_backlinks, referring_domains, organic_keywords, traffic_cost)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
             authority_score=excluded.authority_score,
             total_backlinks=excluded.total_backlinks,
@@ -257,43 +270,41 @@ def upsert_semrush_data(df):
     conn.close()
 
 def get_historical_data(start_date, end_date):
-    """Fetches combined historical data from SQLite."""
-    conn = get_connection()
-    
+    from sqlalchemy import create_engine
+    engine = create_engine(SUPABASE_URI.replace('postgresql://', 'postgresql+psycopg2://'))
     ga4_df = pd.read_sql_query(
-        "SELECT * FROM ga4_daily WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM ga4_daily WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
     
     gsc_df = pd.read_sql_query(
-        "SELECT * FROM gsc_daily WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM gsc_daily WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
     
     social_df = pd.read_sql_query(
-        "SELECT * FROM social_daily WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM social_daily WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
 
     ga4_channels_df = pd.read_sql_query(
-        "SELECT * FROM ga4_channels WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM ga4_channels WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
 
     gsc_queries_df = pd.read_sql_query(
-        "SELECT * FROM gsc_queries WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM gsc_queries WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
 
     crm_df = pd.read_sql_query(
-        "SELECT * FROM crm_conversions WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM crm_conversions WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
 
     semrush_df = pd.read_sql_query(
-        "SELECT * FROM semrush_daily WHERE date >= ? AND date <= ? ORDER BY date ASC", 
-        conn, params=(start_date, end_date)
+        "SELECT * FROM semrush_daily WHERE date >= %(start)s AND date <= %(end)s ORDER BY date ASC", 
+        engine, params={"start": start_date, "end": end_date}
     )
     
-    conn.close()
     return ga4_df, gsc_df, social_df, ga4_channels_df, gsc_queries_df, crm_df, semrush_df
