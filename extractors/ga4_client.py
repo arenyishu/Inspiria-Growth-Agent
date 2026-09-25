@@ -95,41 +95,7 @@ def get_ga4_daily_data(start_date, end_date):
             return pd.DataFrame(data)
         except Exception as e:
             print(f"Error fetching daily GA4 data: {e}")
-
-    # --- PREDICTIVE FALLBACK ENGINE ---
-    # Runs when credentials.json is missing (e.g. on Streamlit Cloud for Hackathon)
-    from datetime import datetime, timedelta
-    import random
-    
-    start = datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.strptime(end_date, '%Y-%m-%d')
-    
-    data = []
-    current = start
-    while current <= end:
-        # Generate realistic traffic patterns with slight growth over time
-        days_since_2023 = (current - datetime(2023,1,1)).days
-        base_traffic = 300 + (days_since_2023 * 0.5)
-        
-        # Weekend dip
-        if current.weekday() >= 5:
-            base_traffic *= 0.6
-            
-        sessions = int(base_traffic + random.uniform(-50, 100))
-        users = int(sessions * 0.85)
-        pageviews = int(sessions * 2.1)
-        conversions = int(sessions * 0.03)
-        
-        data.append({
-            "date": current.strftime('%Y-%m-%d'),
-            "sessions": max(0, sessions),
-            "active_users": max(0, users),
-            "conversions": max(0, conversions),
-            "pageviews": max(0, pageviews)
-        })
-        current += timedelta(days=1)
-        
-    return pd.DataFrame(data)
+    return None
 
 def get_ga4_channels_data(start_date, end_date):
     """Fetches daily metrics by channel from GA4 for database storage."""
@@ -164,33 +130,7 @@ def get_ga4_channels_data(start_date, end_date):
             return pd.DataFrame(data)
         except Exception as e:
             print(f"Error fetching channel GA4 data: {e}")
-
-    # --- FALLBACK ---
-    from datetime import datetime, timedelta
-    import random
-    start = datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.strptime(end_date, '%Y-%m-%d')
-    data = []
-    current = start
-    channels = ["Organic Search", "Direct", "Social", "Referral", "Email"]
-    while current <= end:
-        daily_total = 300 + ((current - datetime(2023,1,1)).days * 0.5)
-        if current.weekday() >= 5: daily_total *= 0.6
-        for ch in channels:
-            if ch == "Organic Search": share = 0.5
-            elif ch == "Direct": share = 0.2
-            elif ch == "Social": share = 0.15
-            elif ch == "Referral": share = 0.1
-            else: share = 0.05
-            
-            sessions = int((daily_total * share) + random.uniform(-10, 10))
-            data.append({
-                "date": current.strftime('%Y-%m-%d'),
-                "sessionDefaultChannelGroup": ch,
-                "sessions": max(0, sessions)
-            })
-        current += timedelta(days=1)
-    return pd.DataFrame(data)
+    return None
 
 if __name__ == "__main__":
     df = get_ga4_data()

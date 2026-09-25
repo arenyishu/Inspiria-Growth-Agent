@@ -86,28 +86,7 @@ def get_gsc_daily_data(start_date, end_date):
             return pd.DataFrame(data)
         except Exception as e:
             print(f"Error fetching daily GSC data: {e}")
-
-    # --- FALLBACK ---
-    from datetime import datetime, timedelta
-    import random
-    start = datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.strptime(end_date, '%Y-%m-%d')
-    data = []
-    current = start
-    while current <= end:
-        days_since = (current - datetime(2023,1,1)).days
-        base_imp = 5000 + (days_since * 5)
-        if current.weekday() >= 5: base_imp *= 0.5
-        imp = int(base_imp + random.uniform(-500, 500))
-        clicks = int(imp * 0.04)
-        
-        data.append({
-            "date": current.strftime('%Y-%m-%d'),
-            "clicks": max(0, clicks),
-            "impressions": max(0, imp)
-        })
-        current += timedelta(days=1)
-    return pd.DataFrame(data)
+    return None
 
 def get_gsc_queries_data(start_date, end_date):
     """Fetches daily query data from Google Search Console."""
@@ -141,34 +120,7 @@ def get_gsc_queries_data(start_date, end_date):
             return pd.DataFrame(data)
         except Exception as e:
             print(f"Error fetching queries GSC data: {e}")
-
-    # --- FALLBACK ---
-    from datetime import datetime, timedelta
-    import random
-    start = datetime.strptime(start_date, '%Y-%m-%d')
-    end = datetime.strptime(end_date, '%Y-%m-%d')
-    data = []
-    current = start
-    queries = ["digital marketing", "seo services", "ai marketing agency", "brand strategy", "inspiria"]
-    while current <= end:
-        daily_total = 5000 + ((current - datetime(2023,1,1)).days * 5)
-        if current.weekday() >= 5: daily_total *= 0.5
-        for q in queries:
-            if q == "inspiria": share = 0.4
-            elif q == "digital marketing": share = 0.2
-            elif q == "seo services": share = 0.2
-            else: share = 0.1
-            
-            imp = int((daily_total * share) + random.uniform(-50, 50))
-            clicks = int(imp * (random.uniform(0.01, 0.1)))
-            data.append({
-                "date": current.strftime('%Y-%m-%d'),
-                "query": q,
-                "clicks": max(0, clicks),
-                "impressions": max(0, imp)
-            })
-        current += timedelta(days=1)
-    return pd.DataFrame(data)
+    return None
 
 if __name__ == "__main__":
     # Test dates (Format must be YYYY-MM-DD for GSC)
