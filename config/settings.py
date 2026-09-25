@@ -16,3 +16,27 @@ THRESHOLDS = {
     "WARNING_DECLINE": -10.0,
     "GROWTH": 10.0
 }
+
+def get_google_credentials(scopes=None):
+    """
+    Returns Google OAuth2 credentials.
+    Tries Streamlit Secrets (for cloud), then falls back to local credentials.json.
+    """
+    try:
+        import streamlit as st
+        from google.oauth2 import service_account
+        if "gcp_service_account" in st.secrets:
+            creds_info = dict(st.secrets["gcp_service_account"])
+            if scopes:
+                return service_account.Credentials.from_service_account_info(creds_info, scopes=scopes)
+            return service_account.Credentials.from_service_account_info(creds_info)
+    except Exception:
+        pass
+
+    if GOOGLE_APPLICATION_CREDENTIALS and os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+        from google.oauth2 import service_account
+        if scopes:
+            return service_account.Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS, scopes=scopes)
+        return service_account.Credentials.from_service_account_file(GOOGLE_APPLICATION_CREDENTIALS)
+        
+    return None

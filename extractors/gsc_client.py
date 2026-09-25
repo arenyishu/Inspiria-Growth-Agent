@@ -57,12 +57,12 @@ def get_gsc_data(start_date, end_date):
 
 def get_gsc_daily_data(start_date, end_date):
     """Fetches daily aggregate search data from Google Search Console."""
-    if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+    from config.settings import get_google_credentials
+    credentials = get_google_credentials(scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
+    
+    if credentials:
         try:
-            credentials = service_account.Credentials.from_service_account_file(
-                GOOGLE_APPLICATION_CREDENTIALS,
-                scopes=['https://www.googleapis.com/auth/webmasters.readonly']
-            )
+            from googleapiclient.discovery import build
             service = build('searchconsole', 'v1', credentials=credentials)
             
             request = {
@@ -111,15 +111,13 @@ def get_gsc_daily_data(start_date, end_date):
 
 def get_gsc_queries_data(start_date, end_date):
     """Fetches daily query data from Google Search Console."""
-    if not os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
-        return None
-
-    try:
-        credentials = service_account.Credentials.from_service_account_file(
-            GOOGLE_APPLICATION_CREDENTIALS,
-            scopes=['https://www.googleapis.com/auth/webmasters.readonly']
-        )
-        service = build('searchconsole', 'v1', credentials=credentials)
+    from config.settings import get_google_credentials
+    credentials = get_google_credentials(scopes=['https://www.googleapis.com/auth/webmasters.readonly'])
+    
+    if credentials:
+        try:
+            from googleapiclient.discovery import build
+            service = build('searchconsole', 'v1', credentials=credentials)
         
         request = {
             'startDate': start_date,

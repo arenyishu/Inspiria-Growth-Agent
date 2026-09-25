@@ -58,10 +58,13 @@ def get_ga4_data(start_date="7daysAgo", end_date="today"):
 
 def get_ga4_daily_data(start_date, end_date):
     """Fetches daily metrics from GA4 for database storage."""
+    from config.settings import get_google_credentials
+    credentials = get_google_credentials()
+    
     # --- LIVE API LOGIC ---
-    if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+    if credentials:
         try:
-            client = BetaAnalyticsDataClient()
+            client = BetaAnalyticsDataClient(credentials=credentials)
             request = RunReportRequest(
                 property=f"properties/{GA4_PROPERTY_ID}",
                 dimensions=[Dimension(name="date")],
@@ -130,9 +133,12 @@ def get_ga4_daily_data(start_date, end_date):
 
 def get_ga4_channels_data(start_date, end_date):
     """Fetches daily metrics by channel from GA4 for database storage."""
-    if os.path.exists(GOOGLE_APPLICATION_CREDENTIALS):
+    from config.settings import get_google_credentials
+    credentials = get_google_credentials()
+    
+    if credentials:
         try:
-            client = BetaAnalyticsDataClient()
+            client = BetaAnalyticsDataClient(credentials=credentials)
             request = RunReportRequest(
                 property=f"properties/{GA4_PROPERTY_ID}",
                 dimensions=[Dimension(name="date"), Dimension(name="sessionDefaultChannelGroup")],
