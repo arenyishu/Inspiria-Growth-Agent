@@ -1,0 +1,9 @@
+google-api-python-client
+google-analytics-data
+pandas
+python-dotenv
+google-generativeai
+streamlit
+plotly
+requests
+openpyxl

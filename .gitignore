@@ -1,0 +1,6 @@
+﻿.env
+credentials.json
+__pycache__/
+*.pyc
+growth_data.db
+.gemini/

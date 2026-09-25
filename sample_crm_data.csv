@@ -1,0 +1,7 @@
+﻿Conversion ID,Conversion Date,Landing Page,Source,Qualified?,Customer?,Revenue / Pipeline Value
+C001,2026-09-18,/pricing,google,Yes,No,5000
+C002,2026-09-19,/features,facebook,No,No,0
+C003,2026-09-20,/pricing,google,Yes,Yes,15000
+C004,2026-09-21,/blog,linkedin,Yes,No,2500
+C005,2026-09-22,/contact,google,Yes,No,8000
+C006,2026-09-23,/pricing,google,Yes,Yes,12000
