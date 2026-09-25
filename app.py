@@ -43,8 +43,23 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if not os.path.exists("growth_data.db"):
-    st.warning("Database not found! Please run `python scripts/backfill_history.py` in your terminal.")
-    st.stop()
+    st.info("First run detected: Initializing database and generating historical data... Please wait a few seconds.")
+    import subprocess
+    import sys
+    
+    # Initialize DB
+    from database.db_manager import init_db
+    init_db()
+    
+    # Run both backfill scripts automatically
+    try:
+        subprocess.run([sys.executable, "scripts/backfill_history.py"], check=True)
+        subprocess.run([sys.executable, "scripts/backfill_semrush.py"], check=True)
+        st.success("Database initialized! Refreshing...")
+        st.rerun()
+    except Exception as e:
+        st.error(f"Error initializing data: {e}")
+        st.stop()
 
 with st.sidebar:
     st.header("🎯 Set Monthly Targets")
