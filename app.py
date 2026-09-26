@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 import importlib
 import database.db_manager
 importlib.reload(database.db_manager)
-from database.db_manager import get_historical_data, save_ai_insights, get_latest_ai_insights
+from database.db_manager import get_historical_data, save_ai_insights, get_latest_ai_insights, get_advanced_gsc_data
 from engines.kpi_engine import calculate_percentage_change
 from ai_layer.analyst import analyze_growth_data
 import os
