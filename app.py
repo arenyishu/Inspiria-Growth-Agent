@@ -512,7 +512,7 @@ with tab4:
 
 with tab5:
     st.header("Data Ingestion")
-    st.write("Upload CSV files or manually enter daily data to push it to the Supabase Data Warehouse.")
+    st.write("Manually enter daily data to push it directly into the Supabase Data Warehouse.")
     
     with st.expander("📊 Google Analytics 4 (Website Traffic)"):
         st.write("Automatically synced via API, but you can manually override or add historic data here:")
@@ -551,21 +551,7 @@ with tab5:
                 st.success("GSC data saved!")
 
     with st.expander("📱 Social Media (Meta / LinkedIn)"):
-        st.write("Upload a CSV export from your social tools, or enter manually below.")
-        uploaded_file = st.file_uploader("Upload Social Data (CSV)", type="csv")
-        if uploaded_file is not None:
-            try:
-                import pandas as pd
-                df = pd.read_csv(uploaded_file)
-                st.dataframe(df.head())
-                if st.button("Save CSV to Database", type="primary", key="btn_soc"):
-                    from database.db_manager import upsert_social_data
-                    upsert_social_data(df)
-                    st.success("Social CSV warehoused!")
-            except Exception as e:
-                st.error(f"Error reading CSV: {e}")
-        
-        st.markdown("#### Manual Entry")
+        st.write("Manually log your Social Media metrics:")
         with st.form("social_manual"):
             c1, c2 = st.columns(2)
             m_date = c1.date_input("Date", key="soc_date")
@@ -604,16 +590,27 @@ with tab5:
                 st.success("SEMrush data saved!")
                 
     with st.expander("💼 CRM Conversions (Pipeline)"):
-        st.write("Upload your leads/sales from HubSpot, Salesforce, etc.")
-        uploaded_crm = st.file_uploader("Upload CRM Data (CSV)", type="csv", key="crm_up")
-        if uploaded_crm is not None:
-            try:
+        st.write("Manually log your new CRM leads or sales:")
+        with st.form("crm_manual"):
+            c1, c2 = st.columns(2)
+            m_id = c1.text_input("Conversion ID (e.g., Lead-101)", key="crm_id")
+            m_date = c2.date_input("Date", key="crm_date")
+            m_page = c1.text_input("Landing Page", key="crm_page")
+            m_src = c2.text_input("Source (e.g., Organic Search)", key="crm_src")
+            m_qual = c1.checkbox("Is Qualified Lead?", key="crm_qual")
+            m_cust = c2.checkbox("Became Customer?", key="crm_cust")
+            m_rev = c1.number_input("Revenue Generated ($)", min_value=0.0)
+            if st.form_submit_button("Save CRM Data"):
                 import pandas as pd
-                crm_df_up = pd.read_csv(uploaded_crm)
-                st.dataframe(crm_df_up.head())
-                if st.button("Save to Pipeline", type="primary", key="btn_crm"):
-                    from database.db_manager import upsert_crm_conversions
-                    upsert_crm_conversions(crm_df_up)
-                    st.success("CRM Data warehoused!")
-            except Exception as e:
-                st.error(f"Error reading CRM CSV: {e}")
+                from database.db_manager import upsert_crm_conversions
+                df = pd.DataFrame([{
+                    "conversion_id": m_id,
+                    "date": m_date.strftime('%Y-%m-%d'),
+                    "landing_page": m_page,
+                    "source": m_src,
+                    "qualified": m_qual,
+                    "customer": m_cust,
+                    "revenue": m_rev
+                }])
+                upsert_crm_conversions(df)
+                st.success("CRM Data saved!")
