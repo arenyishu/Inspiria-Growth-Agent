@@ -11,11 +11,11 @@ def send_weekly_report(data_dict):
     data_dict contains the week's metrics.
     """
     try:
-        if 'SMTP_SENDER_EMAIL' in st.secrets:
+        try:
             sender_email = st.secrets['SMTP_SENDER_EMAIL']
             sender_password = st.secrets['SMTP_SENDER_PASSWORD']
             receivers = st.secrets['SMTP_RECEIVERS'].split(',')
-        else:
+        except Exception:
             sender_email = os.environ.get('SMTP_SENDER_EMAIL')
             sender_password = os.environ.get('SMTP_SENDER_PASSWORD')
             receivers = os.environ.get('SMTP_RECEIVERS', '').split(',')
@@ -72,9 +72,9 @@ def send_weekly_report(data_dict):
             server.login(sender_email, sender_password.replace(' ', ''))
             server.sendmail(sender_email, receivers, msg.as_string())
             
-        print(f"✅ Weekly report emailed successfully to {len(receivers)} recipients!")
+        print(f"Weekly report emailed successfully to {len(receivers)} recipients!")
         return True
         
     except Exception as e:
-        print(f"❌ Failed to send email: {e}")
+        print(f"Failed to send email: {e}")
         return False
