@@ -67,6 +67,46 @@ def init_db():
         PRIMARY KEY (date, query)
     )
     ''')
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gsc_pages (
+        date TEXT,
+        page TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        PRIMARY KEY (date, page)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gsc_countries (
+        date TEXT,
+        country TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        PRIMARY KEY (date, country)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gsc_devices (
+        date TEXT,
+        device TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        PRIMARY KEY (date, device)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gsc_search_appearance (
+        date TEXT,
+        appearance TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        PRIMARY KEY (date, appearance)
+    )
+    """)
+
 
     # Table for Social Media Daily Aggregates
     cursor.execute('''
@@ -355,3 +395,63 @@ def get_latest_ai_insights():
         return None
     finally:
         conn.close()
+
+def upsert_gsc_pages(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        cursor.execute("""
+        INSERT INTO gsc_pages (date, page, clicks, impressions)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT(date, page) DO UPDATE SET
+            clicks=excluded.clicks,
+            impressions=excluded.impressions
+        """, (row['date'], str(row['page']), int(row['clicks']), int(row['impressions'])))
+    conn.commit()
+    conn.close()
+
+def upsert_gsc_countries(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        cursor.execute("""
+        INSERT INTO gsc_countries (date, country, clicks, impressions)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT(date, country) DO UPDATE SET
+            clicks=excluded.clicks,
+            impressions=excluded.impressions
+        """, (row['date'], str(row['country']), int(row['clicks']), int(row['impressions'])))
+    conn.commit()
+    conn.close()
+
+def upsert_gsc_devices(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        cursor.execute("""
+        INSERT INTO gsc_devices (date, device, clicks, impressions)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT(date, device) DO UPDATE SET
+            clicks=excluded.clicks,
+            impressions=excluded.impressions
+        """, (row['date'], str(row['device']), int(row['clicks']), int(row['impressions'])))
+    conn.commit()
+    conn.close()
+
+def upsert_gsc_search_appearance(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        cursor.execute("""
+        INSERT INTO gsc_search_appearance (date, appearance, clicks, impressions)
+        VALUES (%s, %s, %s, %s)
+        ON CONFLICT(date, appearance) DO UPDATE SET
+            clicks=excluded.clicks,
+            impressions=excluded.impressions
+        """, (row['date'], str(row['appearance']), int(row['clicks']), int(row['impressions'])))
+    conn.commit()
+    conn.close()
