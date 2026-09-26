@@ -233,7 +233,8 @@ def upsert_crm_conversions(df):
 
 def add_action_task(task_name, priority):
     conn = get_connection()
-    conn.execute("INSERT INTO action_register (task_name, status, priority, created_at) VALUES (%s, 'Planned', %s, CURRENT_DATE)", (task_name, priority))
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO action_register (task_name, status, priority, created_at) VALUES (%s, 'Planned', %s, CURRENT_DATE)", (task_name, priority))
     conn.commit()
     conn.close()
 
@@ -247,7 +248,8 @@ def get_action_tasks():
 
 def update_action_task(task_id, status):
     conn = get_connection()
-    conn.execute("UPDATE action_register SET status = %s WHERE task_id = %s", (status, task_id))
+    cursor = conn.cursor()
+    cursor.execute("UPDATE action_register SET status = %s WHERE task_id = %s", (status, task_id))
     conn.commit()
     conn.close()
 
