@@ -512,37 +512,108 @@ with tab4:
 
 with tab5:
     st.header("Data Ingestion")
+    st.write("Upload CSV files or manually enter daily data to push it to the Supabase Data Warehouse.")
     
-    st.subheader("1. Social Media Upload")
-    st.write("Because getting official API keys for Meta/LinkedIn can take weeks of legal review, use this module to securely import your real exported data.")
-    st.info("You can find a 'sample_social_template.csv' file in the project folder to see the required format.")
-    
-    uploaded_file = st.file_uploader("Upload Social Data (CSV)", type="csv")
-    if uploaded_file is not None:
-        try:
-            df = pd.read_csv(uploaded_file)
-            st.write("Preview of Uploaded Data:")
-            st.dataframe(df.head())
-            if st.button("Save to Database", type="primary"):
-                from database.db_manager import upsert_social_data
-                upsert_social_data(df)
-                st.success("Data successfully warehoused! Go to the Overview tab to see your new Funnel.")
-        except Exception as e:
-            st.error(f"Error reading CSV: {e}")
-            
-    st.markdown("<br><hr><br>", unsafe_allow_html=True)
-    st.subheader("2. CRM Conversions (Pipeline) Upload")
-    st.write("Upload your leads/sales from HubSpot, Salesforce, etc. (See `sample_crm_data.csv`).")
-    uploaded_crm = st.file_uploader("Upload CRM Data (CSV)", type="csv", key="crm_up")
-    if uploaded_crm is not None:
-        try:
-            crm_df_up = pd.read_csv(uploaded_crm)
-            st.write("Preview:")
-            st.dataframe(crm_df_up.head())
-            if st.button("Save to Pipeline", type="primary"):
-                from database.db_manager import upsert_crm_conversions
-                upsert_crm_conversions(crm_df_up)
-                st.success("CRM Data warehoused! Go to the Scorecard to see pipeline updates.")
-        except Exception as e:
-            st.error(f"Error reading CRM CSV: {e}")
+    with st.expander("📊 Google Analytics 4 (Website Traffic)"):
+        st.write("Automatically synced via API, but you can manually override or add historic data here:")
+        with st.form("ga4_manual"):
+            c1, c2 = st.columns(2)
+            m_date = c1.date_input("Date", key="ga4_date")
+            m_sess = c2.number_input("Sessions", min_value=0)
+            m_users = c1.number_input("Active Users", min_value=0)
+            m_views = c2.number_input("Pageviews", min_value=0)
+            m_conv = c1.number_input("Conversions", min_value=0)
+            if st.form_submit_button("Save GA4 Data"):
+                import pandas as pd
+                from database.db_manager import upsert_ga4_data
+                df = pd.DataFrame([{
+                    "date": m_date.strftime('%Y-%m-%d'),
+                    "sessions": m_sess,
+                    "active_users": m_users,
+                    "pageviews": m_views,
+                    "conversions": m_conv
+                }])
+                upsert_ga4_data(df)
+                st.success("GA4 data saved!")
 
+    with st.expander("🔍 Google Search Console (SEO)"):
+        st.write("Automatically synced via API, but you can manually override or add historic data here:")
+        with st.form("gsc_manual"):
+            c1, c2 = st.columns(2)
+            m_date = c1.date_input("Date", key="gsc_date")
+            m_clicks = c2.number_input("Clicks", min_value=0)
+            m_imp = c1.number_input("Impressions", min_value=0)
+            if st.form_submit_button("Save GSC Data"):
+                import pandas as pd
+                from database.db_manager import upsert_gsc_data
+                df = pd.DataFrame([{"date": m_date.strftime('%Y-%m-%d'), "clicks": m_clicks, "impressions": m_imp}])
+                upsert_gsc_data(df)
+                st.success("GSC data saved!")
+
+    with st.expander("📱 Social Media (Meta / LinkedIn)"):
+        st.write("Upload a CSV export from your social tools, or enter manually below.")
+        uploaded_file = st.file_uploader("Upload Social Data (CSV)", type="csv")
+        if uploaded_file is not None:
+            try:
+                import pandas as pd
+                df = pd.read_csv(uploaded_file)
+                st.dataframe(df.head())
+                if st.button("Save CSV to Database", type="primary", key="btn_soc"):
+                    from database.db_manager import upsert_social_data
+                    upsert_social_data(df)
+                    st.success("Social CSV warehoused!")
+            except Exception as e:
+                st.error(f"Error reading CSV: {e}")
+        
+        st.markdown("#### Manual Entry")
+        with st.form("social_manual"):
+            c1, c2 = st.columns(2)
+            m_date = c1.date_input("Date", key="soc_date")
+            m_foll = c2.number_input("Total Followers", min_value=0)
+            m_reach = c1.number_input("Daily Reach", min_value=0)
+            m_eng = c2.number_input("Daily Engagement", min_value=0)
+            if st.form_submit_button("Save Social Data"):
+                import pandas as pd
+                from database.db_manager import upsert_social_data
+                df = pd.DataFrame([{"date": m_date.strftime('%Y-%m-%d'), "followers": m_foll, "reach": m_reach, "engagement": m_eng}])
+                upsert_social_data(df)
+                st.success("Social data saved!")
+
+    with st.expander("📈 SEMrush (SEO & Authority)"):
+        st.write("Manually log your SEMrush rankings here if you do not have the API add-on.")
+        with st.form("semrush_manual"):
+            c1, c2 = st.columns(2)
+            m_date = c1.date_input("Date", key="sem_date")
+            m_auth = c2.number_input("Authority Score", min_value=0)
+            m_links = c1.number_input("Total Backlinks", min_value=0)
+            m_ref = c2.number_input("Referring Domains", min_value=0)
+            m_org = c1.number_input("Organic Keywords", min_value=0)
+            m_cost = c2.number_input("Traffic Cost ($)", min_value=0)
+            if st.form_submit_button("Save SEMrush Data"):
+                import pandas as pd
+                from database.db_manager import upsert_semrush_data
+                df = pd.DataFrame([{
+                    "date": m_date.strftime('%Y-%m-%d'), 
+                    "authority_score": m_auth, 
+                    "total_backlinks": m_links, 
+                    "referring_domains": m_ref, 
+                    "organic_keywords": m_org, 
+                    "traffic_cost": m_cost
+                }])
+                upsert_semrush_data(df)
+                st.success("SEMrush data saved!")
+                
+    with st.expander("💼 CRM Conversions (Pipeline)"):
+        st.write("Upload your leads/sales from HubSpot, Salesforce, etc.")
+        uploaded_crm = st.file_uploader("Upload CRM Data (CSV)", type="csv", key="crm_up")
+        if uploaded_crm is not None:
+            try:
+                import pandas as pd
+                crm_df_up = pd.read_csv(uploaded_crm)
+                st.dataframe(crm_df_up.head())
+                if st.button("Save to Pipeline", type="primary", key="btn_crm"):
+                    from database.db_manager import upsert_crm_conversions
+                    upsert_crm_conversions(crm_df_up)
+                    st.success("CRM Data warehoused!")
+            except Exception as e:
+                st.error(f"Error reading CRM CSV: {e}")
