@@ -405,6 +405,11 @@ with tab1:
                     st.session_state.ai_results = analyze_growth_data(evidence)
                     if st.session_state.ai_results:
                         save_ai_insights(st.session_state.ai_results)
+                        
+                        # Auto-assign tasks to the Action Register
+                        from database.db_manager import add_action_task
+                        for action in st.session_state.ai_results.get("recommended_actions", []):
+                            add_action_task(f"[AI] {action}", "High")
 
     if st.session_state.ai_results:
         st.success("Analysis Complete!")
