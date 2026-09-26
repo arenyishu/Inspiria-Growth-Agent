@@ -510,6 +510,26 @@ with tab4:
     else:
         st.info("No SEMrush data available for this period.")
 
+
+def safe_read_csv(file_obj):
+    import pandas as pd
+    import io
+    content = file_obj.getvalue().decode('utf-8', errors='replace')
+    lines = content.split('\n')
+    
+    start_idx = 0
+    # Scan first 25 lines for typical header keywords to skip Google's junk metadata
+    for i, line in enumerate(lines[:25]):
+        lower_line = line.lower()
+        if 'date' in lower_line or 'clicks' in lower_line or 'sessions' in lower_line or 'total followers' in lower_line or 'conversion_id' in lower_line or 'authority' in lower_line:
+            start_idx = i
+            break
+            
+    df = pd.read_csv(io.StringIO('\n'.join(lines[start_idx:])))
+    # Standardize column names
+    df.columns = [str(c).strip().lower().replace(' ', '_') for c in df.columns]
+    return df
+
 with tab5:
     st.header("Data Ingestion")
     st.write("Upload your exported CSV data files to securely push them to the Supabase Data Warehouse.")
@@ -520,7 +540,7 @@ with tab5:
         if up_ga4:
             try:
                 import pandas as pd
-                df = pd.read_csv(up_ga4)
+                df = safe_read_csv(up_ga4)
                 st.dataframe(df.head())
                 if st.button("Save GA4 to Database", type="primary", key="btn_ga4"):
                     from database.db_manager import upsert_ga4_data
@@ -535,7 +555,7 @@ with tab5:
         if up_gsc:
             try:
                 import pandas as pd
-                df = pd.read_csv(up_gsc)
+                df = safe_read_csv(up_gsc)
                 st.dataframe(df.head())
                 if st.button("Save GSC to Database", type="primary", key="btn_gsc"):
                     from database.db_manager import upsert_gsc_data
@@ -550,7 +570,7 @@ with tab5:
         if up_soc:
             try:
                 import pandas as pd
-                df = pd.read_csv(up_soc)
+                df = safe_read_csv(up_soc)
                 st.dataframe(df.head())
                 if st.button("Save Social to Database", type="primary", key="btn_soc"):
                     from database.db_manager import upsert_social_data
@@ -565,7 +585,7 @@ with tab5:
         if up_sem:
             try:
                 import pandas as pd
-                df = pd.read_csv(up_sem)
+                df = safe_read_csv(up_sem)
                 st.dataframe(df.head())
                 if st.button("Save SEMrush to Database", type="primary", key="btn_sem"):
                     from database.db_manager import upsert_semrush_data
@@ -580,7 +600,7 @@ with tab5:
         if up_crm:
             try:
                 import pandas as pd
-                df = pd.read_csv(up_crm)
+                df = safe_read_csv(up_crm)
                 st.dataframe(df.head())
                 if st.button("Save CRM to Pipeline", type="primary", key="btn_crm"):
                     from database.db_manager import upsert_crm_conversions
