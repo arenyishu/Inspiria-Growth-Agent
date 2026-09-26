@@ -520,7 +520,6 @@ def get_advanced_gsc_data():
     conn = get_connection()
     from sqlalchemy import create_engine
     import pandas as pd
-    from config.settings import SUPABASE_URI
     engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
     
     try:
