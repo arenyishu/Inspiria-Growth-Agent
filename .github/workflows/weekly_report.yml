@@ -2,8 +2,8 @@ name: Weekly SEO & Analytics Report
 
 on:
   schedule:
-    # Runs at 08:00 UTC every Monday
-    - cron: '0 8 * * 1'
+    # Runs at 03:30 UTC (9:00 AM IST) every Monday
+    - cron: '30 3 * * 1'
   workflow_dispatch: # Allows manual triggering from GitHub UI
 
 jobs:
