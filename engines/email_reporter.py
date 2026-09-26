@@ -35,34 +35,70 @@ def send_weekly_report(data_dict):
         # Build HTML Email
         html_content = f"""
         <html>
-            <body style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-                <h2 style="color: #1A73E8;">Inspiria Weekly Growth Report</h2>
-                <p>Here is the automated SEO and Analytics breakdown for the past 7 days.</p>
+            <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="color: #1A73E8; margin-bottom: 5px;">📈 Inspiria Weekly Growth Report</h2>
+                    <p style="color: #5f6368; font-size: 14px; margin-top: 0;">Automated Data Extraction via GA4 & GSC APIs</p>
+                </div>
                 
-                <h3 style="background-color: #f1f3f4; padding: 10px; border-radius: 5px; color: #d93025;">⚙️ TECH SEO</h3>
-                <ul style="list-style-type: none; padding-left: 10px;">
-                    <li><b>Total Crawl Errors:</b> {data_dict.get('total_crawl_errors', 'N/A')}</li>
-                    <li><b>Indexed Pages:</b> {data_dict.get('indexed_pages', 'N/A')}</li>
-                    <li><b>Index Coverage Errors:</b> {data_dict.get('index_coverage_errors', 'N/A')}</li>
-                    <li><b>5xx Errors:</b> {data_dict.get('server_errors_5xx', 'N/A')}</li>
-                    <li><b>Mobile Usability Issues:</b> {data_dict.get('mobile_usability_issues', 'N/A')}</li>
-                    <li><b>Sitemap Errors:</b> {data_dict.get('sitemap_errors', 'N/A')}</li>
-                </ul>
+                <h3 style="background-color: #f8f9fa; border-left: 4px solid #188038; padding: 10px 15px; margin-top: 20px;">🔍 Google Search Console (SEO)</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Impressions:</b></td>
+                        <td style="text-align: right; font-weight: bold; color: #188038;">{data_dict.get('impressions', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Clicks:</b></td>
+                        <td style="text-align: right; font-weight: bold; color: #188038;">{data_dict.get('clicks', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Average CTR:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('avg_ctr', '0')}%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Avg Keyword Position:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('avg_keyword_position', '0')}</td>
+                    </tr>
+                </table>
 
-                <h3 style="background-color: #f1f3f4; padding: 10px; border-radius: 5px; color: #188038;">📄 ON-PAGE SEO</h3>
-                <ul style="list-style-type: none; padding-left: 10px;">
-                    <li><b>Avg Keyword Position:</b> {data_dict.get('avg_keyword_position', 'N/A')}</li>
-                    <li><b>Impressions:</b> {data_dict.get('impressions', 'N/A')}</li>
-                    <li><b>Clicks:</b> {data_dict.get('clicks', 'N/A')}</li>
-                    <li><b>Avg CTR:</b> {data_dict.get('avg_ctr', 'N/A')}%</li>
-                    <li><b>Organic Sessions:</b> {data_dict.get('organic_sessions', 'N/A')}</li>
-                    <li><b>Avg Time on Page:</b> {data_dict.get('avg_time_on_page', 'N/A')}s</li>
-                    <li><b>Bounce Rate:</b> {data_dict.get('bounce_rate', 'N/A')}%</li>
-                    <li><b>Leads from Organic:</b> {data_dict.get('leads_from_organic', 'N/A')}</li>
-                </ul>
+                <h3 style="background-color: #f8f9fa; border-left: 4px solid #f29900; padding: 10px 15px; margin-top: 20px;">📊 Google Analytics 4 (Traffic)</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Sessions:</b></td>
+                        <td style="text-align: right; font-weight: bold; color: #f29900;">{data_dict.get('organic_sessions', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Pageviews:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('pageviews', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Bounce Rate:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('bounce_rate', '0')}%</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Avg Time on Page:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('avg_time_on_page', '0')}s</td>
+                    </tr>
+                </table>
+
+                <h3 style="background-color: #f8f9fa; border-left: 4px solid #1da1f2; padding: 10px 15px; margin-top: 20px;">📱 Social Media Impact</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Followers:</b></td>
+                        <td style="text-align: right; font-weight: bold; color: #1da1f2;">{data_dict.get('social_followers', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Total Reach:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('social_reach', '0')}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #eee;">
+                        <td style="padding: 8px 0;"><b>Engagement Count:</b></td>
+                        <td style="text-align: right; font-weight: bold;">{data_dict.get('social_engagement', '0')}</td>
+                    </tr>
+                </table>
                 
-                <hr>
-                <p style="font-size: 12px; color: #777; text-align: center;">This report was automatically generated by the Inspiria AI Growth Agent.</p>
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0 15px 0;">
+                <p style="font-size: 11px; color: #999; text-align: center;">This report was securely generated by the Inspiria AI Growth Agent using Official Google APIs.</p>
             </body>
         </html>
         """

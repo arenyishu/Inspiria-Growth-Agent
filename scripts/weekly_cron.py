@@ -82,9 +82,13 @@ def run_weekly_automation():
         
         # Aggregate database metrics
         weekly_metrics = {
-            'organic_sessions': int(ga4_df['sessions'].sum()) if not ga4_df.empty and 'sessions' in ga4_df.columns else 'N/A',
-            'clicks': int(gsc_df['clicks'].sum()) if not gsc_df.empty and 'clicks' in gsc_df.columns else 'N/A',
-            'impressions': int(gsc_df['impressions'].sum()) if not gsc_df.empty and 'impressions' in gsc_df.columns else 'N/A',
+            'organic_sessions': int(ga4_df['sessions'].sum()) if not ga4_df.empty and 'sessions' in ga4_df.columns else 0,
+            'pageviews': int(ga4_df['pageviews'].sum()) if not ga4_df.empty and 'pageviews' in ga4_df.columns else 0,
+            'clicks': int(gsc_df['clicks'].sum()) if not gsc_df.empty and 'clicks' in gsc_df.columns else 0,
+            'impressions': int(gsc_df['impressions'].sum()) if not gsc_df.empty and 'impressions' in gsc_df.columns else 0,
+            'social_followers': int(social_df['followers'].max()) if not social_df.empty and 'followers' in social_df.columns else 0,
+            'social_reach': int(social_df['reach'].sum()) if not social_df.empty and 'reach' in social_df.columns else 0,
+            'social_engagement': int(social_df['engagement'].sum()) if not social_df.empty and 'engagement' in social_df.columns else 0,
         }
         
         # Fetch the missing on-page fields directly from Google APIs
@@ -92,17 +96,7 @@ def run_weekly_automation():
         extended = fetch_missing_metrics(start_str, end_str)
         weekly_metrics.update(extended)
         
-        # NOTE: SEMrush fields (Total Crawl Errors, etc.) are intentionally removed from here 
-        # since the user has 0 balance and simplified the email template to avoid them showing N/A.
-        # We will map the remaining N/A fields from the simplified template explicitly below:
-        
-        weekly_metrics['total_crawl_errors'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['indexed_pages'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['index_coverage_errors'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['server_errors_5xx'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['mobile_usability_issues'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['sitemap_errors'] = 'N/A (Requires SEMrush API Units)'
-        weekly_metrics['leads_from_organic'] = 'N/A (Requires CRM Connection)'
+        # NOTE: SEMrush fields were removed to keep the report clean and strictly Google/Social based.
         
         print("Data aggregated successfully. Triggering Email Reporter...")
         success = send_weekly_report(weekly_metrics)
