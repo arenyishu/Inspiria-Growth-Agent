@@ -24,7 +24,7 @@ def analyze_growth_data(evidence_package):
         genai.configure(api_key=api_key)
         
         # Using the flash model for speed in the MVP
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-flash-latest')
         
         prompt = f"""
         You are the Inspiria AI Growth Agent. Your job is to analyze marketing data and provide actionable intelligence.
