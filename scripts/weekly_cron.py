@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from database.db_manager import get_historical_data
 from engines.email_reporter import send_weekly_report
 from extractors.semrush_client import fetch_domain_analytics, fetch_backlinks, fetch_site_audit
+from extractors.pagespeed_client import fetch_core_web_vitals
 
 def run_weekly_automation():
     print(f"[{datetime.now()}] Starting Weekly Growth Automation...")
@@ -32,13 +33,17 @@ def run_weekly_automation():
             'avg_keyword_position': 'N/A',
         }
         
-        # Now, explicitly pull LIVE data from SEMrush API for the advanced metrics!
+        # Now, explicitly pull LIVE data from APIs
+        print("Pulling live PageSpeed Insights data...")
+        pagespeed = fetch_core_web_vitals("https://inspiria.edu.in")
+        
         print("Pulling live SEMrush Site Audit and Analytics data...")
         analytics = fetch_domain_analytics("inspiria.edu.in")
         backlinks = fetch_backlinks("inspiria.edu.in")
         site_audit = fetch_site_audit("30277688")
         
-        # Merge SEMrush metrics into the dictionary
+        # Merge API metrics into the dictionary
+        weekly_metrics.update(pagespeed)
         weekly_metrics.update(analytics)
         weekly_metrics.update(backlinks)
         weekly_metrics.update(site_audit)
