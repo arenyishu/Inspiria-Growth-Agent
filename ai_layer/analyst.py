@@ -1,10 +1,10 @@
-﻿import google.generativeai as genai
+import google.generativeai as genai
 import json
 import streamlit as st
 import os
 
 def analyze_growth_data(evidence_package):
-    \"\"\"Sends the structured evidence to the LLM for analysis and recommendation.\"\"\"
+    """Sends the structured evidence to the LLM for analysis and recommendation."""
     
     # Safely get the key from Streamlit secrets, then fallback to os.environ
     try:
@@ -26,7 +26,7 @@ def analyze_growth_data(evidence_package):
         # Using the flash model for speed in the MVP
         model = genai.GenerativeModel('gemini-1.5-flash')
         
-        prompt = f\"\"\"
+        prompt = f"""
         You are the Inspiria AI Growth Agent. Your job is to analyze marketing data and provide actionable intelligence.
         
         Here is the exact data for the last 7 days compared to the previous 7 days:
@@ -47,7 +47,7 @@ def analyze_growth_data(evidence_package):
           "recommended_actions": ["Specific next steps for the marketing team"],
           "priority": "High | Medium | Low"
         }}
-        \"\"\"
+        """
         
         response = model.generate_content(prompt)
         text_response = response.text
