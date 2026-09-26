@@ -130,7 +130,8 @@ def upsert_ga4_data(df):
     df = df[['date', 'sessions', 'active_users', 'conversions', 'pageviews']]
     
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO ga4_daily (date, sessions, active_users, conversions, pageviews)
         VALUES (%s, %s, %s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
@@ -147,7 +148,8 @@ def upsert_ga4_channels(df):
     if df is None or df.empty: return
     conn = get_connection()
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO ga4_channels (date, channel, sessions)
         VALUES (%s, %s, %s)
         ON CONFLICT(date, channel) DO UPDATE SET sessions=excluded.sessions
@@ -168,7 +170,8 @@ def upsert_gsc_data(df):
     df = df[['date', 'clicks', 'impressions']]
     
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO gsc_daily (date, clicks, impressions)
         VALUES (%s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
@@ -183,7 +186,8 @@ def upsert_gsc_queries(df):
     if df is None or df.empty: return
     conn = get_connection()
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO gsc_queries (date, query, clicks, impressions)
         VALUES (%s, %s, %s, %s)
         ON CONFLICT(date, query) DO UPDATE SET
@@ -206,7 +210,8 @@ def upsert_social_data(df):
     df = df[['date', 'total_followers', 'daily_reach', 'daily_engagement']]
     
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO social_daily (date, total_followers, daily_reach, daily_engagement)
         VALUES (%s, %s, %s, %s)
         ON CONFLICT(date) DO UPDATE SET
@@ -222,7 +227,8 @@ def upsert_crm_conversions(df):
     if df is None or df.empty: return
     conn = get_connection()
     for _, row in df.iterrows():
-        conn.execute('''
+        cursor = conn.cursor()
+        cursor.execute('''
         INSERT INTO crm_conversions (conversion_id, date, landing_page, source, qualified, customer, revenue)
         VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT(conversion_id) DO UPDATE SET
