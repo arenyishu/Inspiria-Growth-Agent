@@ -5,14 +5,17 @@ import psycopg2
 import urllib.parse
 
 try:
+    # First try Streamlit Secrets (for Cloud)
     if 'SUPABASE_URI' in st.secrets:
         SUPABASE_URI = st.secrets['SUPABASE_URI']
+    # Then try local environment variables (for local development)
     else:
-        password = urllib.parse.quote_plus('Abc@123!Inspiria-Growth-Agent')
-        SUPABASE_URI = f'postgresql://postgres.xvtmffdkyiyxetczyvwe:{password}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
-except:
-    password = urllib.parse.quote_plus('Abc@123!Inspiria-Growth-Agent')
-    SUPABASE_URI = f'postgresql://postgres.xvtmffdkyiyxetczyvwe:{password}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres'
+        SUPABASE_URI = os.environ.get('SUPABASE_URI')
+except Exception:
+    SUPABASE_URI = os.environ.get('SUPABASE_URI')
+
+if not SUPABASE_URI:
+    print("WARNING: SUPABASE_URI is not set! Database connections will fail.")
 
 def get_connection():
     return psycopg2.connect(SUPABASE_URI)
