@@ -1,4 +1,4 @@
-﻿import os
+import os
 import sys
 from datetime import datetime, timedelta
 import pandas as pd
@@ -22,14 +22,14 @@ def run_weekly_automation():
         
         # Aggregate the week's metrics from the database (GA4 / GSC)
         weekly_metrics = {
-            'organic_sessions': int(ga4_df['organic_sessions'].sum()) if not ga4_df.empty else 'N/A',
-            'bounce_rate': round(ga4_df['bounce_rate'].mean(), 2) if not ga4_df.empty else 'N/A',
-            'avg_time_on_page': round(ga4_df['avg_time_on_page'].mean(), 1) if not ga4_df.empty else 'N/A',
+            'organic_sessions': int(ga4_df['sessions'].sum()) if not ga4_df.empty and 'sessions' in ga4_df.columns else 'N/A',
+            'bounce_rate': 'N/A',
+            'avg_time_on_page': 'N/A',
             
-            'clicks': int(gsc_df['clicks'].sum()) if not gsc_df.empty else 'N/A',
-            'impressions': int(gsc_df['impressions'].sum()) if not gsc_df.empty else 'N/A',
-            'avg_ctr': round(gsc_df['ctr'].mean() * 100, 2) if not gsc_df.empty else 'N/A',
-            'avg_keyword_position': round(gsc_df['position'].mean(), 1) if not gsc_df.empty else 'N/A',
+            'clicks': int(gsc_df['clicks'].sum()) if not gsc_df.empty and 'clicks' in gsc_df.columns else 'N/A',
+            'impressions': int(gsc_df['impressions'].sum()) if not gsc_df.empty and 'impressions' in gsc_df.columns else 'N/A',
+            'avg_ctr': 'N/A',
+            'avg_keyword_position': 'N/A',
         }
         
         # Now, explicitly pull LIVE data from SEMrush API for the advanced metrics!

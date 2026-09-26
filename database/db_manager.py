@@ -3,6 +3,9 @@ import os
 import streamlit as st
 import psycopg2
 import urllib.parse
+from dotenv import load_dotenv
+
+load_dotenv()
 
 try:
     # First try Streamlit Secrets (for Cloud)

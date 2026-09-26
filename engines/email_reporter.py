@@ -4,6 +4,9 @@ from email.mime.multipart import MIMEMultipart
 import os
 from datetime import datetime
 import streamlit as st
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def send_weekly_report(data_dict):
     """
