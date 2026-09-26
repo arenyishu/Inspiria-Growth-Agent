@@ -107,6 +107,25 @@ def init_db():
     )
     """)
 
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ga4_gsc_landing_pages (
+        date TEXT,
+        landing_page TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        ctr REAL,
+        position REAL,
+        active_users INTEGER,
+        engaged_sessions INTEGER,
+        engagement_rate REAL,
+        avg_engagement_time REAL,
+        event_count INTEGER,
+        key_events INTEGER,
+        PRIMARY KEY (date, landing_page)
+    )
+    """)
+
+
 
     # Table for Social Media Daily Aggregates
     cursor.execute('''
@@ -453,5 +472,46 @@ def upsert_gsc_search_appearance(df):
             clicks=excluded.clicks,
             impressions=excluded.impressions
         """, (row['date'], str(row['appearance']), int(row['clicks']), int(row['impressions'])))
+    conn.commit()
+    conn.close()
+
+def upsert_ga4_gsc_landing_pages(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        try:
+            cursor.execute("""
+            INSERT INTO ga4_gsc_landing_pages (
+                date, landing_page, clicks, impressions, ctr, position, 
+                active_users, engaged_sessions, engagement_rate, avg_engagement_time, 
+                event_count, key_events
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT(date, landing_page) DO UPDATE SET
+                clicks=excluded.clicks,
+                impressions=excluded.impressions,
+                ctr=excluded.ctr,
+                position=excluded.position,
+                active_users=excluded.active_users,
+                engaged_sessions=excluded.engaged_sessions,
+                engagement_rate=excluded.engagement_rate,
+                avg_engagement_time=excluded.avg_engagement_time,
+                event_count=excluded.event_count,
+                key_events=excluded.key_events
+            """, (
+                row['date'], str(row['landing_page']), 
+                int(row['clicks']) if pd.notnull(row['clicks']) else 0, 
+                int(row['impressions']) if pd.notnull(row['impressions']) else 0,
+                float(row['ctr']) if pd.notnull(row['ctr']) else 0.0,
+                float(row['position']) if pd.notnull(row['position']) else 0.0,
+                int(row['active_users']) if pd.notnull(row['active_users']) else 0,
+                int(row['engaged_sessions']) if pd.notnull(row['engaged_sessions']) else 0,
+                float(row['engagement_rate']) if pd.notnull(row['engagement_rate']) else 0.0,
+                float(row['avg_engagement_time']) if pd.notnull(row['avg_engagement_time']) else 0.0,
+                int(row['event_count']) if pd.notnull(row['event_count']) else 0,
+                int(row['key_events']) if pd.notnull(row['key_events']) else 0
+            ))
+        except Exception as e:
+            print(f"Error inserting row: {e}")
     conn.commit()
     conn.close()
