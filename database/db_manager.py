@@ -515,3 +515,32 @@ def upsert_ga4_gsc_landing_pages(df):
             print(f"Error inserting row: {e}")
     conn.commit()
     conn.close()
+
+def get_advanced_gsc_data():
+    conn = get_connection()
+    from sqlalchemy import create_engine
+    import pandas as pd
+    from config.settings import SUPABASE_URI
+    engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+    
+    try:
+        pages = pd.read_sql_query("SELECT * FROM gsc_pages ORDER BY clicks DESC LIMIT 50", engine)
+    except: pages = pd.DataFrame()
+    
+    try:
+        countries = pd.read_sql_query("SELECT * FROM gsc_countries ORDER BY clicks DESC LIMIT 50", engine)
+    except: countries = pd.DataFrame()
+    
+    try:
+        devices = pd.read_sql_query("SELECT * FROM gsc_devices ORDER BY clicks DESC LIMIT 50", engine)
+    except: devices = pd.DataFrame()
+    
+    try:
+        appearance = pd.read_sql_query("SELECT * FROM gsc_search_appearance ORDER BY clicks DESC LIMIT 50", engine)
+    except: appearance = pd.DataFrame()
+    
+    try:
+        landing = pd.read_sql_query("SELECT * FROM ga4_gsc_landing_pages ORDER BY clicks DESC LIMIT 50", engine)
+    except: landing = pd.DataFrame()
+    
+    return pages, countries, devices, appearance, landing

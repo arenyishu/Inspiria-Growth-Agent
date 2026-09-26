@@ -349,6 +349,46 @@ with tab1:
             st.dataframe(q_grouped.head(7), use_container_width=True, hide_index=True)
         st.markdown("</div>", unsafe_allow_html=True)
 
+    
+    # --- ADVANCED SEO DEEP DIVE ---
+    st.markdown("<br><h2 style='font-size: 20px; color: var(--text-color); margin-bottom: 20px;'>Advanced SEO & Traffic Deep Dive</h2>", unsafe_allow_html=True)
+    
+    pages_df, countries_df, devices_df, appearance_df, landing_df = get_advanced_gsc_data()
+    
+    adv_tab1, adv_tab2, adv_tab3, adv_tab4, adv_tab5 = st.tabs([
+        "Top Landing Pages (GA4+GSC)", "Top Pages (GSC)", "Top Countries", "Top Devices", "Search Appearance"
+    ])
+    
+    with adv_tab1:
+        if not landing_df.empty:
+            st.dataframe(landing_df.drop(columns=['date'], errors='ignore'), use_container_width=True, hide_index=True)
+        else:
+            st.info("No Landing Page data available.")
+            
+    with adv_tab2:
+        if not pages_df.empty:
+            st.dataframe(pages_df.drop(columns=['date'], errors='ignore'), use_container_width=True, hide_index=True)
+        else:
+            st.info("No Pages data available.")
+            
+    with adv_tab3:
+        if not countries_df.empty:
+            st.dataframe(countries_df.drop(columns=['date'], errors='ignore'), use_container_width=True, hide_index=True)
+        else:
+            st.info("No Countries data available.")
+            
+    with adv_tab4:
+        if not devices_df.empty:
+            st.dataframe(devices_df.drop(columns=['date'], errors='ignore'), use_container_width=True, hide_index=True)
+        else:
+            st.info("No Devices data available.")
+            
+    with adv_tab5:
+        if not appearance_df.empty:
+            st.dataframe(appearance_df.drop(columns=['date'], errors='ignore'), use_container_width=True, hide_index=True)
+        else:
+            st.info("No Search Appearance data available.")
+
     # --- AI ANALYST & RECOMMENDATIONS ---
     st.markdown("<br>", unsafe_allow_html=True)
 
