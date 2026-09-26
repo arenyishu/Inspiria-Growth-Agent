@@ -41,27 +41,16 @@ def send_weekly_report(data_dict):
                 
                 <h3 style="background-color: #f1f3f4; padding: 10px; border-radius: 5px; color: #d93025;">⚙️ TECH SEO</h3>
                 <ul style="list-style-type: none; padding-left: 10px;">
-                    <li><b>Pages Crawled:</b> {data_dict.get('pages_crawled', 'N/A')}</li>
                     <li><b>Total Crawl Errors:</b> {data_dict.get('total_crawl_errors', 'N/A')}</li>
                     <li><b>Indexed Pages:</b> {data_dict.get('indexed_pages', 'N/A')}</li>
                     <li><b>Index Coverage Errors:</b> {data_dict.get('index_coverage_errors', 'N/A')}</li>
-                    <li><b>Broken Links:</b> {data_dict.get('broken_links', 'N/A')}</li>
                     <li><b>5xx Errors:</b> {data_dict.get('server_errors_5xx', 'N/A')}</li>
-                    <li><b>Avg LCP:</b> {data_dict.get('avg_lcp', 'N/A')}</li>
-                    <li><b>Avg INP / FID:</b> {data_dict.get('avg_inp', 'N/A')}</li>
-                    <li><b>Avg CLS:</b> {data_dict.get('avg_cls', 'N/A')}</li>
                     <li><b>Mobile Usability Issues:</b> {data_dict.get('mobile_usability_issues', 'N/A')}</li>
-                    <li><b>Duplicate Pages:</b> {data_dict.get('duplicate_pages', 'N/A')}</li>
-                    <li><b>hreflang Errors:</b> {data_dict.get('hreflang_errors', 'N/A')}</li>
                     <li><b>Sitemap Errors:</b> {data_dict.get('sitemap_errors', 'N/A')}</li>
-                    <li><b>Tech SEO Score:</b> {data_dict.get('tech_seo_score', 'N/A')}</li>
                 </ul>
 
                 <h3 style="background-color: #f1f3f4; padding: 10px; border-radius: 5px; color: #188038;">📄 ON-PAGE SEO</h3>
                 <ul style="list-style-type: none; padding-left: 10px;">
-                    <li><b>Total Keywords Ranking:</b> {data_dict.get('total_keywords', 'N/A')}</li>
-                    <li><b>Keywords in Top 3:</b> {data_dict.get('keywords_top_3', 'N/A')}</li>
-                    <li><b>Keywords in Top 10:</b> {data_dict.get('keywords_top_10', 'N/A')}</li>
                     <li><b>Avg Keyword Position:</b> {data_dict.get('avg_keyword_position', 'N/A')}</li>
                     <li><b>Impressions:</b> {data_dict.get('impressions', 'N/A')}</li>
                     <li><b>Clicks:</b> {data_dict.get('clicks', 'N/A')}</li>
@@ -69,19 +58,7 @@ def send_weekly_report(data_dict):
                     <li><b>Organic Sessions:</b> {data_dict.get('organic_sessions', 'N/A')}</li>
                     <li><b>Avg Time on Page:</b> {data_dict.get('avg_time_on_page', 'N/A')}s</li>
                     <li><b>Bounce Rate:</b> {data_dict.get('bounce_rate', 'N/A')}%</li>
-                    <li><b>Internal Links Added:</b> {data_dict.get('internal_links_added', 'N/A')}</li>
                     <li><b>Leads from Organic:</b> {data_dict.get('leads_from_organic', 'N/A')}</li>
-                </ul>
-
-                <h3 style="background-color: #f1f3f4; padding: 10px; border-radius: 5px; color: #1967d2;">🔗 OFF-PAGE SEO</h3>
-                <ul style="list-style-type: none; padding-left: 10px;">
-                    <li><b>Total Backlinks:</b> {data_dict.get('total_backlinks', 'N/A')}</li>
-                    <li><b>New Backlinks:</b> {data_dict.get('new_backlinks', 'N/A')}</li>
-                    <li><b>Lost Backlinks:</b> {data_dict.get('lost_backlinks', 'N/A')}</li>
-                    <li><b>Referring Domains:</b> {data_dict.get('referring_domains', 'N/A')}</li>
-                    <li><b>New Referring Domains:</b> {data_dict.get('new_referring_domains', 'N/A')}</li>
-                    <li><b>Avg Domain Rating (DR):</b> {data_dict.get('avg_dr', 'N/A')}</li>
-                    <li><b>Brand Mentions:</b> {data_dict.get('brand_mentions', 'N/A')}</li>
                 </ul>
                 
                 <hr>
