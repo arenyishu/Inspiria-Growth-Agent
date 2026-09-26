@@ -5,7 +5,9 @@ import pandas as pd
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database.db_manager import get_historical_data
+from database.db_manager import get_historical_data, upsert_ga4_data, upsert_gsc_data, upsert_ga4_channels_data, upsert_gsc_queries_data
+from extractors.ga4_client import get_ga4_daily_data, get_ga4_channels_data
+from extractors.gsc_client import get_gsc_daily_data, get_gsc_queries_data
 from engines.email_reporter import send_weekly_report
 from google.analytics.data_v1beta import BetaAnalyticsDataClient
 from google.analytics.data_v1beta.types import DateRange, Metric, RunReportRequest
@@ -82,6 +84,23 @@ def run_weekly_automation():
     start_date = end_date - timedelta(days=7)
     start_str = start_date.strftime('%Y-%m-%d')
     end_str = end_date.strftime('%Y-%m-%d')
+    
+    print(f"Ingesting latest data from {start_str} to {end_str}...")
+    try:
+        ga4_df = get_ga4_daily_data(start_str, end_str)
+        if ga4_df is not None and not ga4_df.empty: upsert_ga4_data(ga4_df)
+        
+        ga4_ch_df = get_ga4_channels_data(start_str, end_str)
+        if ga4_ch_df is not None and not ga4_ch_df.empty: upsert_ga4_channels_data(ga4_ch_df)
+        
+        gsc_df = get_gsc_daily_data(start_str, end_str)
+        if gsc_df is not None and not gsc_df.empty: upsert_gsc_data(gsc_df)
+        
+        gsc_q_df = get_gsc_queries_data(start_str, end_str)
+        if gsc_q_df is not None and not gsc_q_df.empty: upsert_gsc_queries_data(gsc_q_df)
+        print("Data Ingestion complete.")
+    except Exception as e:
+        print(f"Ingestion warning: {e}")
     
     try:
         ga4_df, gsc_df, social_df, ga4_channels_df, gsc_queries_df, crm_df, semrush_df = get_historical_data(start_str, end_str)
