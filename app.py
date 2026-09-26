@@ -512,105 +512,79 @@ with tab4:
 
 with tab5:
     st.header("Data Ingestion")
-    st.write("Manually enter daily data to push it directly into the Supabase Data Warehouse.")
+    st.write("Upload your exported CSV data files to securely push them to the Supabase Data Warehouse.")
     
     with st.expander("📊 Google Analytics 4 (Website Traffic)"):
-        st.write("Automatically synced via API, but you can manually override or add historic data here:")
-        with st.form("ga4_manual"):
-            c1, c2 = st.columns(2)
-            m_date = c1.date_input("Date", key="ga4_date")
-            m_sess = c2.number_input("Sessions", min_value=0)
-            m_users = c1.number_input("Active Users", min_value=0)
-            m_views = c2.number_input("Pageviews", min_value=0)
-            m_conv = c1.number_input("Conversions", min_value=0)
-            if st.form_submit_button("Save GA4 Data"):
+        st.write("Upload your GA4 export (columns: date, sessions, active_users, pageviews, conversions).")
+        up_ga4 = st.file_uploader("Upload GA4 CSV", type="csv", key="up_ga4")
+        if up_ga4:
+            try:
                 import pandas as pd
-                from database.db_manager import upsert_ga4_data
-                df = pd.DataFrame([{
-                    "date": m_date.strftime('%Y-%m-%d'),
-                    "sessions": m_sess,
-                    "active_users": m_users,
-                    "pageviews": m_views,
-                    "conversions": m_conv
-                }])
-                upsert_ga4_data(df)
-                st.success("GA4 data saved!")
+                df = pd.read_csv(up_ga4)
+                st.dataframe(df.head())
+                if st.button("Save GA4 to Database", type="primary", key="btn_ga4"):
+                    from database.db_manager import upsert_ga4_data
+                    upsert_ga4_data(df)
+                    st.success("GA4 Data warehoused!")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
     with st.expander("🔍 Google Search Console (SEO)"):
-        st.write("Automatically synced via API, but you can manually override or add historic data here:")
-        with st.form("gsc_manual"):
-            c1, c2 = st.columns(2)
-            m_date = c1.date_input("Date", key="gsc_date")
-            m_clicks = c2.number_input("Clicks", min_value=0)
-            m_imp = c1.number_input("Impressions", min_value=0)
-            if st.form_submit_button("Save GSC Data"):
+        st.write("Upload your GSC export (columns: date, clicks, impressions).")
+        up_gsc = st.file_uploader("Upload GSC CSV", type="csv", key="up_gsc")
+        if up_gsc:
+            try:
                 import pandas as pd
-                from database.db_manager import upsert_gsc_data
-                df = pd.DataFrame([{"date": m_date.strftime('%Y-%m-%d'), "clicks": m_clicks, "impressions": m_imp}])
-                upsert_gsc_data(df)
-                st.success("GSC data saved!")
+                df = pd.read_csv(up_gsc)
+                st.dataframe(df.head())
+                if st.button("Save GSC to Database", type="primary", key="btn_gsc"):
+                    from database.db_manager import upsert_gsc_data
+                    upsert_gsc_data(df)
+                    st.success("GSC Data warehoused!")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
     with st.expander("📱 Social Media (Meta / LinkedIn)"):
-        st.write("Manually log your Social Media metrics:")
-        with st.form("social_manual"):
-            c1, c2 = st.columns(2)
-            m_date = c1.date_input("Date", key="soc_date")
-            m_foll = c2.number_input("Total Followers", min_value=0)
-            m_reach = c1.number_input("Daily Reach", min_value=0)
-            m_eng = c2.number_input("Daily Engagement", min_value=0)
-            if st.form_submit_button("Save Social Data"):
+        st.write("Upload your Social Media export (columns: date, followers, reach, engagement).")
+        up_soc = st.file_uploader("Upload Social CSV", type="csv", key="up_soc")
+        if up_soc:
+            try:
                 import pandas as pd
-                from database.db_manager import upsert_social_data
-                df = pd.DataFrame([{"date": m_date.strftime('%Y-%m-%d'), "followers": m_foll, "reach": m_reach, "engagement": m_eng}])
-                upsert_social_data(df)
-                st.success("Social data saved!")
+                df = pd.read_csv(up_soc)
+                st.dataframe(df.head())
+                if st.button("Save Social to Database", type="primary", key="btn_soc"):
+                    from database.db_manager import upsert_social_data
+                    upsert_social_data(df)
+                    st.success("Social Data warehoused!")
+            except Exception as e:
+                st.error(f"Error: {e}")
 
     with st.expander("📈 SEMrush (SEO & Authority)"):
-        st.write("Manually log your SEMrush rankings here if you do not have the API add-on.")
-        with st.form("semrush_manual"):
-            c1, c2 = st.columns(2)
-            m_date = c1.date_input("Date", key="sem_date")
-            m_auth = c2.number_input("Authority Score", min_value=0)
-            m_links = c1.number_input("Total Backlinks", min_value=0)
-            m_ref = c2.number_input("Referring Domains", min_value=0)
-            m_org = c1.number_input("Organic Keywords", min_value=0)
-            m_cost = c2.number_input("Traffic Cost ($)", min_value=0)
-            if st.form_submit_button("Save SEMrush Data"):
+        st.write("Upload your SEMrush export (columns: date, authority_score, total_backlinks, referring_domains, organic_keywords, traffic_cost).")
+        up_sem = st.file_uploader("Upload SEMrush CSV", type="csv", key="up_sem")
+        if up_sem:
+            try:
                 import pandas as pd
-                from database.db_manager import upsert_semrush_data
-                df = pd.DataFrame([{
-                    "date": m_date.strftime('%Y-%m-%d'), 
-                    "authority_score": m_auth, 
-                    "total_backlinks": m_links, 
-                    "referring_domains": m_ref, 
-                    "organic_keywords": m_org, 
-                    "traffic_cost": m_cost
-                }])
-                upsert_semrush_data(df)
-                st.success("SEMrush data saved!")
+                df = pd.read_csv(up_sem)
+                st.dataframe(df.head())
+                if st.button("Save SEMrush to Database", type="primary", key="btn_sem"):
+                    from database.db_manager import upsert_semrush_data
+                    upsert_semrush_data(df)
+                    st.success("SEMrush Data warehoused!")
+            except Exception as e:
+                st.error(f"Error: {e}")
                 
     with st.expander("💼 CRM Conversions (Pipeline)"):
-        st.write("Manually log your new CRM leads or sales:")
-        with st.form("crm_manual"):
-            c1, c2 = st.columns(2)
-            m_id = c1.text_input("Conversion ID (e.g., Lead-101)", key="crm_id")
-            m_date = c2.date_input("Date", key="crm_date")
-            m_page = c1.text_input("Landing Page", key="crm_page")
-            m_src = c2.text_input("Source (e.g., Organic Search)", key="crm_src")
-            m_qual = c1.checkbox("Is Qualified Lead?", key="crm_qual")
-            m_cust = c2.checkbox("Became Customer?", key="crm_cust")
-            m_rev = c1.number_input("Revenue Generated ($)", min_value=0.0)
-            if st.form_submit_button("Save CRM Data"):
+        st.write("Upload your CRM export (columns: conversion_id, date, landing_page, source, qualified, customer, revenue).")
+        up_crm = st.file_uploader("Upload CRM CSV", type="csv", key="up_crm")
+        if up_crm:
+            try:
                 import pandas as pd
-                from database.db_manager import upsert_crm_conversions
-                df = pd.DataFrame([{
-                    "conversion_id": m_id,
-                    "date": m_date.strftime('%Y-%m-%d'),
-                    "landing_page": m_page,
-                    "source": m_src,
-                    "qualified": m_qual,
-                    "customer": m_cust,
-                    "revenue": m_rev
-                }])
-                upsert_crm_conversions(df)
-                st.success("CRM Data saved!")
+                df = pd.read_csv(up_crm)
+                st.dataframe(df.head())
+                if st.button("Save CRM to Pipeline", type="primary", key="btn_crm"):
+                    from database.db_manager import upsert_crm_conversions
+                    upsert_crm_conversions(df)
+                    st.success("CRM Data warehoused!")
+            except Exception as e:
+                st.error(f"Error: {e}")
