@@ -42,24 +42,6 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-if not os.path.exists("growth_data.db"):
-    st.info("First run detected: Initializing database and generating historical data... Please wait a few seconds.")
-    import subprocess
-    import sys
-    
-    # Initialize DB
-    from database.db_manager import init_db
-    init_db()
-    
-    # Run both backfill scripts automatically
-    try:
-        subprocess.run([sys.executable, "scripts/backfill_history.py"], check=True)
-        subprocess.run([sys.executable, "scripts/backfill_semrush.py"], check=True)
-        st.success("Database initialized! Refreshing...")
-        st.rerun()
-    except Exception as e:
-        st.error(f"Error initializing data: {e}")
-        st.stop()
 
 with st.sidebar:
     st.header("🎯 Set Monthly Targets")
@@ -73,15 +55,15 @@ with st.sidebar:
     
     st.markdown("---")
     st.header("⚙️ Admin Tools")
-    if st.button("Force Sync / Rebuild Data", help="Wipes the local database and generates fresh data from APIs (or fallback engines)."):
+    if st.button("Force Sync / Rebuild Data", help="Generates fresh data from APIs."):
         import subprocess
         import sys
-        if os.path.exists("growth_data.db"):
-            os.remove("growth_data.db")
-        from database.db_manager import init_db
-        init_db()
-        subprocess.run([sys.executable, "scripts/backfill_history.py"])
-        subprocess.run([sys.executable, "scripts/backfill_semrush.py"])
+        
+        # In Supabase, we don't wipe the DB. We just run the upserts!
+        with st.spinner("Syncing data from APIs to Supabase..."):
+            subprocess.run([sys.executable, "scripts/backfill_history.py"])
+            subprocess.run([sys.executable, "scripts/backfill_semrush.py"])
+            
         st.success("Data rebuilt! Refreshing...")
         st.rerun()
 
