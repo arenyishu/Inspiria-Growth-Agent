@@ -5,7 +5,7 @@ from dateutil.relativedelta import relativedelta
 import importlib
 import database.db_manager
 importlib.reload(database.db_manager)
-from database.db_manager import get_historical_data
+from database.db_manager import get_historical_data, save_ai_insights, get_latest_ai_insights
 from engines.kpi_engine import calculate_percentage_change
 from ai_layer.analyst import analyze_growth_data
 import os
@@ -353,7 +353,7 @@ with tab1:
     st.markdown("<br>", unsafe_allow_html=True)
 
     if "ai_results" not in st.session_state:
-        st.session_state.ai_results = None
+        st.session_state.ai_results = get_latest_ai_insights()
 
     with st.container():
         c_banner_l, c_banner_r = st.columns([3, 1])
@@ -403,6 +403,8 @@ with tab1:
                         }
                     }
                     st.session_state.ai_results = analyze_growth_data(evidence)
+                    if st.session_state.ai_results:
+                        save_ai_insights(st.session_state.ai_results)
 
     if st.session_state.ai_results:
         st.success("Analysis Complete!")

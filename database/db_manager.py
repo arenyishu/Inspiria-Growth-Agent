@@ -314,3 +314,36 @@ def get_historical_data(start_date, end_date):
     )
     
     return ga4_df, gsc_df, social_df, ga4_channels_df, gsc_queries_df, crm_df, semrush_df
+def save_ai_insights(insights_dict):
+    conn = get_connection()
+    if not conn: return False
+    try:
+        import json
+        with conn.cursor() as cur:
+            cur.execute(
+                "INSERT INTO ai_insights (insights) VALUES (%s)",
+                (json.dumps(insights_dict),)
+            )
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error saving AI insights: {e}")
+        return False
+    finally:
+        conn.close()
+
+def get_latest_ai_insights():
+    conn = get_connection()
+    if not conn: return None
+    try:
+        with conn.cursor() as cur:
+            cur.execute("SELECT insights FROM ai_insights ORDER BY created_at DESC LIMIT 1")
+            row = cur.fetchone()
+            if row:
+                return row[0]
+        return None
+    except Exception as e:
+        print(f"Error getting AI insights: {e}")
+        return None
+    finally:
+        conn.close()
