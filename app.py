@@ -552,9 +552,54 @@ with tab_seo:
 
 
 with tab2:
-    st.header("Action Register")
-    st.write("Track strategic marketing tasks assigned by the AI Analyst.")
+    st.header("Action Register (AI SEO Tagging)")
+    st.write("Track strategic tasks and automatically tag your massive keyword lists using Gemini AI.")
     
+    # AI Tagging Section
+    st.markdown("### Phase 2: AI Keyword Analysis")
+    st.markdown("You have thousands of raw keywords in your database. Click the button below to have Gemini automatically tag them with Search Intent and Topic Clusters in batches.")
+    
+    if st.button("▶ Run AI Tagging Batch (1000 Keywords)"):
+        with st.spinner("Gemini AI is analyzing keywords... (this takes ~30-60 seconds to avoid rate limits)"):
+            import sys
+            import os
+            sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+            from ai_layer.keyword_tagger import tag_keywords_batch
+            
+            success = tag_keywords_batch()
+            if success:
+                st.success("Batch successfully tagged and saved to the database!")
+                # small delay so user sees success before rerun
+                import time
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Something went wrong during tagging or rate limit was hit. Check logs.")
+                
+    st.divider()
+    st.subheader("Currently Tagged Keywords")
+    
+    try:
+        from database.db_manager import get_tagged_keywords
+        tagged_df = get_tagged_keywords()
+        if not tagged_df.empty:
+            st.metric("Total Tagged Keywords", len(tagged_df))
+            st.dataframe(tagged_df, use_container_width=True)
+            
+            # Show a cool pie chart of intent
+            import plotly.express as px
+            intent_counts = tagged_df['intent'].value_counts().reset_index()
+            intent_counts.columns = ['Intent', 'Count']
+            fig = px.pie(intent_counts, values='Count', names='Intent', title='Search Intent Distribution', hole=0.4)
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("No keywords have been tagged yet. Click the button above to start!")
+    except Exception as e:
+        st.error(f"Could not load tags: {e}")
+        
+    st.divider()
+    
+    # Original Action Tracking logic
     col_a1, col_a2 = st.columns([3, 1])
     with col_a1:
         new_task = st.text_input("New Task", placeholder="e.g., Improve CTR on Pricing page", label_visibility="collapsed")
@@ -566,23 +611,23 @@ with tab2:
             from database.db_manager import add_action_task
             add_action_task(new_task, new_priority)
             st.rerun()
-
-    from database.db_manager import get_action_tasks, update_action_task
+            
     tasks_df = get_action_tasks()
     if not tasks_df.empty:
-        for _, row in tasks_df.iterrows():
-            with st.container():
-                c1, c2, c3, c4 = st.columns([4, 1, 1, 1])
-                c1.write(f"**{row['task_name']}**")
-                c2.write(f"*{row['priority']}*")
-                c3.write(f"{row['status']}")
-                if row['status'] != 'Done':
-                    if c4.button("✓ Done", key=f"done_{row['task_id']}"):
-                        update_action_task(row['task_id'], 'Done')
+        for idx, row in tasks_df.iterrows():
+            col1, col2, col3 = st.columns([1, 4, 1])
+            with col1:
+                st.write(f"**[{row['priority']}]**")
+            with col2:
+                st.write(row['task'])
+            with col3:
+                if row['status'] == 'Pending':
+                    if st.button("Complete", key=f"complete_{row['id']}"):
+                        from database.db_manager import complete_action_task
+                        complete_action_task(row['id'])
                         st.rerun()
                 else:
-                    c4.write("✅")
-                st.markdown("<hr style='margin: 0.5em 0;'>", unsafe_allow_html=True)
+                    st.write("✅ Done")
     else:
         st.info("No tasks yet. Add a task manually above.")
 
