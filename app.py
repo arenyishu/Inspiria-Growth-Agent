@@ -717,10 +717,19 @@ with tab4:
     else:
         st.info("No Social Media data available for this period. Upload data in the Data Ingestion tab.")
 
-    st.subheader("SEMrush (SEO & Authority)")
-    if not semrush_cur.empty:
-        st.dataframe(semrush_cur)
-    else:
+    st.subheader("SEMrush (Technical Site Audit)")
+    try:
+        from database.db_manager import get_connection
+        conn = get_connection()
+        import pandas as pd
+        audit_raw_df = pd.read_sql_query("SELECT * FROM semrush_site_audit", conn)
+        conn.close()
+        if not audit_raw_df.empty:
+            st.write(f"Showing all {len(audit_raw_df):,} crawled URLs.")
+            st.dataframe(audit_raw_df)
+        else:
+            st.info("No SEMrush Site Audit data found in database.")
+    except Exception as e:
         st.info("No SEMrush data available for this period.")
 
 
