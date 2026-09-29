@@ -620,12 +620,12 @@ with tab2:
             with col1:
                 st.write(f"**[{row['priority']}]**")
             with col2:
-                st.write(row['task'])
+                st.write(row['task_name'])
             with col3:
                 if row['status'] == 'Pending':
-                    if st.button("Complete", key=f"complete_{row['id']}"):
+                    if st.button("Complete", key=f"complete_{row['task_id']}"):
                         from database.db_manager import complete_action_task
-                        complete_action_task(row['id'])
+                        complete_action_task(row['task_id'])
                         st.rerun()
                 else:
                     st.write("✅ Done")

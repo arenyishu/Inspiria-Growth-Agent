@@ -116,6 +116,16 @@ def init_db():
     """)
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ai_keyword_tags (
+        query TEXT PRIMARY KEY,
+        intent TEXT,
+        topic_cluster TEXT,
+        brand_status TEXT,
+        tagged_at TEXT
+    )
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS gsc_advanced_report (
         date TEXT,
         query TEXT,
@@ -659,5 +669,57 @@ def fetch_ga4_advanced():
 def fetch_gsc_advanced():
     conn = get_connection()
     df = pd.read_sql_query("SELECT * FROM gsc_advanced_report ORDER BY date DESC", conn)
+    conn.close()
+    return df
+
+
+def get_untagged_queries(limit=500):
+    conn = get_connection()
+    cursor = conn.cursor()
+    query = f"""
+        SELECT DISTINCT a.query 
+        FROM gsc_advanced_report a
+        LEFT JOIN ai_keyword_tags b ON a.query = b.query
+        WHERE b.query IS NULL
+        LIMIT {limit}
+    """
+    cursor.execute(query)
+    results = cursor.fetchall()
+    conn.close()
+    return [r[0] for r in results] if results else []
+
+
+def upsert_keyword_tags(tags_list):
+    # tags_list should be a list of dicts: [{'query': '...', 'intent': '...', 'topic_cluster': '...', 'brand_status': '...'}]
+    if not tags_list: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    from datetime import datetime
+    now = datetime.now().isoformat()
+    
+    insert_query = """
+        INSERT INTO ai_keyword_tags (query, intent, topic_cluster, brand_status, tagged_at)
+        VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT(query) DO UPDATE SET
+            intent=excluded.intent,
+            topic_cluster=excluded.topic_cluster,
+            brand_status=excluded.brand_status,
+            tagged_at=excluded.tagged_at
+    """
+    
+    data_tuples = [(t['query'], t['intent'], t['topic_cluster'], t['brand_status'], now) for t in tags_list]
+    
+    from psycopg2.extras import execute_batch
+    try:
+        execute_batch(cursor, insert_query, data_tuples)
+    except Exception as e:
+        print(f"Error saving AI tags: {e}")
+        
+    conn.commit()
+    conn.close()
+
+def get_tagged_keywords():
+    conn = get_connection()
+    df = pd.read_sql_query("SELECT * FROM ai_keyword_tags ORDER BY tagged_at DESC", conn)
     conn.close()
     return df
