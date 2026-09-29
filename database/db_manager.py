@@ -98,6 +98,40 @@ def init_db():
     """)
 
     cursor.execute("""
+    
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS ga4_advanced_report (
+        date TEXT,
+        landing_page TEXT,
+        source TEXT,
+        medium TEXT,
+        device TEXT,
+        country TEXT,
+        users INTEGER,
+        sessions INTEGER,
+        engaged_sessions INTEGER,
+        avg_engagement_sec REAL,
+        conversions INTEGER,
+        revenue REAL,
+        PRIMARY KEY (date, landing_page, source, medium, device, country)
+    )
+    """)
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS gsc_advanced_report (
+        date TEXT,
+        query TEXT,
+        landing_page TEXT,
+        country TEXT,
+        device TEXT,
+        clicks INTEGER,
+        impressions INTEGER,
+        ctr REAL,
+        position REAL,
+        PRIMARY KEY (date, query, landing_page, country, device)
+    )
+    """)
+
     CREATE TABLE IF NOT EXISTS gsc_search_appearance (
         date TEXT,
         appearance TEXT,
@@ -543,3 +577,59 @@ def get_advanced_gsc_data():
     except: landing = pd.DataFrame()
     
     return pages, countries, devices, appearance, landing
+
+def upsert_ga4_advanced_report(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        try:
+            cursor.execute("""
+            INSERT INTO ga4_advanced_report (
+                date, landing_page, source, medium, device, country,
+                users, sessions, engaged_sessions, avg_engagement_sec, conversions, revenue
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT(date, landing_page, source, medium, device, country) DO UPDATE SET
+                users=excluded.users,
+                sessions=excluded.sessions,
+                engaged_sessions=excluded.engaged_sessions,
+                avg_engagement_sec=excluded.avg_engagement_sec,
+                conversions=excluded.conversions,
+                revenue=excluded.revenue
+            """, (
+                str(row.get('date', '')), str(row.get('landing_page', '')), str(row.get('source', '')), 
+                str(row.get('medium', '')), str(row.get('device', '')), str(row.get('country', '')),
+                int(row.get('users', 0)), int(row.get('sessions', 0)), int(row.get('engaged_sessions', 0)),
+                float(row.get('avg_engagement_sec', 0.0)), int(row.get('conversions', 0)), float(row.get('revenue', 0.0))
+            ))
+        except Exception as e:
+            pass
+    conn.commit()
+    conn.close()
+
+def upsert_gsc_advanced_report(df):
+    if df is None or df.empty: return
+    conn = get_connection()
+    cursor = conn.cursor()
+    for _, row in df.iterrows():
+        try:
+            cursor.execute("""
+            INSERT INTO gsc_advanced_report (
+                date, query, landing_page, country, device,
+                clicks, impressions, ctr, position
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON CONFLICT(date, query, landing_page, country, device) DO UPDATE SET
+                clicks=excluded.clicks,
+                impressions=excluded.impressions,
+                ctr=excluded.ctr,
+                position=excluded.position
+            """, (
+                str(row.get('date', '')), str(row.get('query', '')), str(row.get('landing_page', '')), 
+                str(row.get('country', '')), str(row.get('device', '')),
+                int(row.get('clicks', 0)), int(row.get('impressions', 0)), 
+                float(row.get('ctr', 0.0)), float(row.get('position', 0.0))
+            ))
+        except Exception as e:
+            pass
+    conn.commit()
+    conn.close()

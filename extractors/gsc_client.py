@@ -134,3 +134,47 @@ if __name__ == "__main__":
     if df is not None:
         print("✅ GSC Data Fetched Successfully:")
         print(df.head())
+
+def get_gsc_advanced_data(start_date="7daysAgo", end_date="today"):
+    """Fetches multi-dimensional advanced SEO data: Date + Query + Page + Country + Device."""
+    credentials = get_google_credentials()
+    if credentials:
+        try:
+            service = build('searchconsole', 'v1', credentials=credentials)
+            
+            # GSC API requires exactly YYYY-MM-DD
+            from datetime import datetime, timedelta
+            if start_date == "7daysAgo":
+                start_date = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+            if end_date == "today":
+                end_date = datetime.now().strftime('%Y-%m-%d')
+                
+            request = {
+                'startDate': start_date,
+                'endDate': end_date,
+                'dimensions': ['date', 'query', 'page', 'country', 'device'],
+                'rowLimit': 25000
+            }
+            
+            response = service.searchanalytics().query(siteUrl=GSC_SITE_URL, body=request).execute()
+            
+            data = []
+            if 'rows' in response:
+                for row in response['rows']:
+                    data.append({
+                        "date": row['keys'][0],
+                        "query": row['keys'][1],
+                        "landing_page": row['keys'][2],
+                        "country": row['keys'][3],
+                        "device": row['keys'][4],
+                        "clicks": row.get('clicks', 0),
+                        "impressions": row.get('impressions', 0),
+                        "ctr": row.get('ctr', 0.0),
+                        "position": row.get('position', 0.0)
+                    })
+                    
+            return pd.DataFrame(data)
+        except Exception as e:
+            print(f"Error fetching advanced GSC data: {e}")
+            return None
+    return None

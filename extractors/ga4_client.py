@@ -144,3 +144,59 @@ if __name__ == "__main__":
     if df is not None:
         print("✅ GA4 Data Fetched Successfully:")
         print(df)
+
+def get_ga4_advanced_data(start_date="7daysAgo", end_date="today"):
+    """Fetches multi-dimensional advanced traffic data."""
+    credentials = get_google_credentials()
+    if credentials:
+        try:
+            client = BetaAnalyticsDataClient(credentials=credentials)
+            request = RunReportRequest(
+                property=f"properties/{GA4_PROPERTY_ID}",
+                dimensions=[
+                    Dimension(name="date"),
+                    Dimension(name="landingPagePlusQueryString"),
+                    Dimension(name="sessionSource"),
+                    Dimension(name="sessionMedium"),
+                    Dimension(name="deviceCategory"),
+                    Dimension(name="country")
+                ],
+                metrics=[
+                    Metric(name="totalUsers"),
+                    Metric(name="sessions"),
+                    Metric(name="engagedSessions"),
+                    Metric(name="averageSessionDuration"),
+                    Metric(name="conversions"),
+                    Metric(name="purchaseRevenue")
+                ],
+                date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                limit=100000,
+            )
+
+            response = client.run_report(request)
+            
+            data = []
+            for row in response.rows:
+                raw_date = row.dimension_values[0].value
+                formatted_date = f"{raw_date[:4]}-{raw_date[4:6]}-{raw_date[6:]}"
+                
+                data.append({
+                    "date": formatted_date,
+                    "landing_page": row.dimension_values[1].value,
+                    "source": row.dimension_values[2].value,
+                    "medium": row.dimension_values[3].value,
+                    "device": row.dimension_values[4].value,
+                    "country": row.dimension_values[5].value,
+                    "users": int(row.metric_values[0].value),
+                    "sessions": int(row.metric_values[1].value),
+                    "engaged_sessions": int(row.metric_values[2].value),
+                    "avg_engagement_sec": float(row.metric_values[3].value),
+                    "conversions": int(float(row.metric_values[4].value)),
+                    "revenue": float(row.metric_values[5].value)
+                })
+                
+            return pd.DataFrame(data)
+        except Exception as e:
+            print(f"Error fetching advanced GA4 data: {e}")
+            return None
+    return None
