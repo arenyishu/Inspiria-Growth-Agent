@@ -612,6 +612,7 @@ with tab2:
             add_action_task(new_task, new_priority)
             st.rerun()
             
+    from database.db_manager import get_action_tasks
     tasks_df = get_action_tasks()
     if not tasks_df.empty:
         for idx, row in tasks_df.iterrows():
