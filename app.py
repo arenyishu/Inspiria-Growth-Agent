@@ -622,7 +622,7 @@ with tab2:
             with col2:
                 st.write(row['task_name'])
             with col3:
-                if row['status'] == 'Pending':
+                if row['status'] != 'Done':
                     if st.button("Complete", key=f"complete_{row['task_id']}"):
                         from database.db_manager import complete_action_task
                         complete_action_task(row['task_id'])
