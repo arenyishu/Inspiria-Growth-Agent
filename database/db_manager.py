@@ -98,8 +98,6 @@ def init_db():
     """)
 
     cursor.execute("""
-    
-    cursor.execute("""
     CREATE TABLE IF NOT EXISTS ga4_advanced_report (
         date TEXT,
         landing_page TEXT,
@@ -132,6 +130,7 @@ def init_db():
     )
     """)
 
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS gsc_search_appearance (
         date TEXT,
         appearance TEXT,
