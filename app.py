@@ -2,9 +2,6 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
-import importlib
-import database.db_manager
-importlib.reload(database.db_manager)
 from database.db_manager import get_historical_data, fetch_ga4_advanced, fetch_gsc_advanced, save_ai_insights, get_latest_ai_insights, get_advanced_gsc_data
 from engines.kpi_engine import calculate_percentage_change
 from ai_layer.analyst import analyze_growth_data
