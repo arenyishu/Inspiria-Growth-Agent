@@ -276,43 +276,40 @@ with tab1:
     else:
         st.info("Upload social data or ensure search data exists to view the funnel.")
 
-    # --- SEMRUSH AUTHORITY ---
-    st.markdown("<br><h2 style='font-size: 20px; color: var(--text-color); margin-bottom: 20px;'>SEO & Authority (SEMrush)</h2>", unsafe_allow_html=True)
-    if not semrush_cur.empty:
-        col_seo1, col_seo2 = st.columns(2)
+    # --- SEMRUSH SITE AUDIT ---
+    st.markdown("<br><h2 style='font-size: 20px; color: var(--text-color); margin-bottom: 20px;'>Technical SEO (SEMrush Audit)</h2>", unsafe_allow_html=True)
+    try:
+        from database.db_manager import get_connection
+        conn = get_connection()
+        import pandas as pd
+        audit_df = pd.read_sql_query("SELECT * FROM semrush_site_audit", conn)
+        conn.close()
         
-        with col_seo1:
-            fig_auth = px.line(semrush_cur, x='date', y='authority_score', 
-                              title="Authority Score Trend",
-                              labels={"authority_score": "Authority Score", "date": "Date"},
-                              color_discrete_sequence=['#ff7043'])
-            fig_auth.update_layout(
-                margin=dict(l=0, r=0, t=40, b=0),
-                height=300,
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#80868B")
-            )
-            # Make the y-axis not start at zero so the growth is visible
-            fig_auth.update_yaxes(range=[semrush_cur['authority_score'].min() - 2, semrush_cur['authority_score'].max() + 2])
-            st.plotly_chart(fig_auth, use_container_width=True, config={'displayModeBar': False})
+        if not audit_df.empty:
+            total_pages = len(audit_df)
+            slow_pages = len(audit_df[audit_df['page_html_load_time_sec'] > 2.0])
+            orphan_pages = len(audit_df[audit_df['incoming_internal_links'] == 0])
             
-        with col_seo2:
-            fig_kw = px.area(semrush_cur, x='date', y='organic_keywords', 
-                              title="Organic Keywords Trend",
-                              labels={"organic_keywords": "Total Keywords", "date": "Date"},
-                              color_discrete_sequence=['#8d6e63'])
-            fig_kw.update_layout(
-                margin=dict(l=0, r=0, t=40, b=0),
-                height=300,
-                paper_bgcolor="rgba(0,0,0,0)",
-                plot_bgcolor="rgba(0,0,0,0)",
-                font=dict(color="#80868B")
-            )
-            # Make the y-axis scaled nicely
-            fig_kw.update_yaxes(range=[semrush_cur['organic_keywords'].min() - 50, semrush_cur['organic_keywords'].max() + 50])
-            st.plotly_chart(fig_kw, use_container_width=True, config={'displayModeBar': False})
-    else:
+            st.markdown(f"""
+            <div class="kpi-container">
+                <div class="kpi-card">
+                    <div class="kpi-value">{total_pages:,}</div>
+                    <div class="kpi-label">Total Pages Crawled</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #ef5350;">{slow_pages:,}</div>
+                    <div class="kpi-label">Slow Pages (> 2s Load)</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-value" style="color: #ff9800;">{orphan_pages:,}</div>
+                    <div class="kpi-label">Orphan Pages (0 Internal Links)</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            st.caption("View the full breakdown and cross-reference this with your traffic on the 'Content Command Center' tab.")
+        else:
+            st.info("No SEMrush data available.")
+    except Exception as e:
         st.info("No SEMrush data available.")
 
     # --- ADVANCED ANALYTICS ---
