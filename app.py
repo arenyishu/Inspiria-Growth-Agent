@@ -66,7 +66,7 @@ with st.sidebar:
         st.rerun()
 
 # --- FUNCTIONAL TABS ---
-tab1, tab_seo, tab2, tab3, tab4, tab5 = st.tabs(["Executive Scorecard", "SEO Deep Dive (New)", "Action Register", "Reports", "Data Sources", "Data Ingestion"])
+tab1, tab_seo, tab_ccc, tab2, tab3, tab4, tab5 = st.tabs(["Executive Scorecard", "SEO Deep Dive (New)", "Content Command Center", "Action Register", "Reports", "Data Sources", "Data Ingestion"])
 
 with tab1:
     # --- HEADER & DATE FILTER ---
@@ -550,6 +550,67 @@ with tab_seo:
     else:
         st.info("Advanced data is still syncing from Google. Please wait a few minutes and refresh.")
 
+
+
+with tab_ccc:
+    st.header("Content Command Center (Phase 3)")
+    st.write("This unified data lake merges your real Google Search Console traffic with your SEMrush Site Audit metrics to expose hidden technical bottlenecks.")
+    
+    try:
+        from database.db_manager import get_connection
+        import pandas as pd
+        
+        # We need SQLAlchemy engine for pandas
+        from config.settings import SUPABASE_URI
+        from sqlalchemy import create_engine
+        engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+        
+        with st.spinner("Merging GSC Traffic with SEMrush Technical Data..."):
+            query = """
+                SELECT 
+                    a.page_url,
+                    a.page_title,
+                    COALESCE(SUM(g.clicks), 0) as total_clicks,
+                    COALESCE(SUM(g.impressions), 0) as total_impressions,
+                    a.incoming_internal_links,
+                    a.page_html_load_time_sec as load_time,
+                    a.http_status_code
+                FROM semrush_site_audit a
+                LEFT JOIN gsc_advanced_report g ON a.page_url = g.landing_page
+                GROUP BY a.page_url, a.page_title, a.incoming_internal_links, a.page_html_load_time_sec, a.http_status_code
+                ORDER BY total_impressions DESC
+                LIMIT 500
+            """
+            merged_df = pd.read_sql_query(query, engine)
+            
+            if not merged_df.empty:
+                st.subheader("Unified Data Lake (Top 500 Pages by Search Impressions)")
+                st.dataframe(merged_df, use_container_width=True)
+                
+                # Insight 1: High Impressions, Zero Internal Links (Orphan Pages)
+                st.divider()
+                st.subheader("🚨 Critical Bottleneck: High Traffic Orphan Pages")
+                st.write("These pages are ranking on Google and getting thousands of impressions, but you have 0 internal links pointing to them on your own website. Adding internal links to these pages will boost their authority massively.")
+                orphan_df = merged_df[(merged_df['incoming_internal_links'] == 0) & (merged_df['total_impressions'] > 100)]
+                if not orphan_df.empty:
+                    st.dataframe(orphan_df[['page_url', 'total_impressions', 'total_clicks', 'incoming_internal_links']], use_container_width=True)
+                else:
+                    st.success("No high-traffic orphan pages found! Great job.")
+                    
+                # Insight 2: High Clicks, Slow Load Time
+                st.divider()
+                st.subheader("🐌 Speed Warning: Slow Loading Traffic Engines")
+                st.write("These pages generate the most clicks for your business, but take longer than 2.0 seconds to load. Speeding these up will instantly improve conversion rates.")
+                slow_df = merged_df[(merged_df['load_time'] > 2.0) & (merged_df['total_clicks'] > 50)]
+                if not slow_df.empty:
+                    st.dataframe(slow_df[['page_url', 'total_clicks', 'load_time']], use_container_width=True)
+                else:
+                    st.success("Your top traffic pages load fast!")
+                    
+            else:
+                st.info("No SEMrush data found.")
+    except Exception as e:
+        st.error(f"Error loading Content Command Center: {e}")
 
 with tab2:
     st.header("Action Register (AI SEO Tagging)")
