@@ -632,3 +632,15 @@ def upsert_gsc_advanced_report(df):
             pass
     conn.commit()
     conn.close()
+
+def fetch_ga4_advanced():
+    conn = get_connection()
+    df = pd.read_sql_query("SELECT * FROM ga4_advanced_report ORDER BY date DESC", conn)
+    conn.close()
+    return df
+
+def fetch_gsc_advanced():
+    conn = get_connection()
+    df = pd.read_sql_query("SELECT * FROM gsc_advanced_report ORDER BY date DESC", conn)
+    conn.close()
+    return df

@@ -5,11 +5,12 @@ from dateutil.relativedelta import relativedelta
 import importlib
 import database.db_manager
 importlib.reload(database.db_manager)
-from database.db_manager import get_historical_data, save_ai_insights, get_latest_ai_insights, get_advanced_gsc_data
+from database.db_manager import get_historical_data, fetch_ga4_advanced, fetch_gsc_advanced, save_ai_insights, get_latest_ai_insights, get_advanced_gsc_data
 from engines.kpi_engine import calculate_percentage_change
 from ai_layer.analyst import analyze_growth_data
 import os
 import plotly.express as px
+import plotly.graph_objects as go
 
 # --- PAGE CONFIG & CSS ---
 st.set_page_config(page_title="Inspiria Growth Command Center", layout="wide", initial_sidebar_state="collapsed")
@@ -68,7 +69,7 @@ with st.sidebar:
         st.rerun()
 
 # --- FUNCTIONAL TABS ---
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["Executive Scorecard", "Action Register", "Reports", "Data Sources", "Data Ingestion"])
+tab1, tab_seo, tab2, tab3, tab4, tab5 = st.tabs(["Executive Scorecard", "SEO Deep Dive (New)", "Action Register", "Reports", "Data Sources", "Data Ingestion"])
 
 with tab1:
     # --- HEADER & DATE FILTER ---
@@ -479,6 +480,79 @@ with tab1:
             st.markdown('<div class="bottom-card"><div style="background: rgba(26, 115, 232, 0.1); padding: 8px; border-radius: 4px;">🔍</div><div><div style="font-weight: 600; font-size: 14px; color: var(--text-color);">Check query visibility</div><div style="font-size: 12px; opacity: 0.7; color: var(--text-color);">Review key queries with declining impressions and position changes.</div></div></div>', unsafe_allow_html=True)
         with r3:
             st.markdown('<div class="bottom-card"><div style="background: rgba(26, 115, 232, 0.1); padding: 8px; border-radius: 4px;">📊</div><div><div style="font-weight: 600; font-size: 14px; color: var(--text-color);">Validate tracking</div><div style="font-size: 12px; opacity: 0.7; color: var(--text-color);">Confirm tracking is working as expected and compare with other data sources.</div></div></div>', unsafe_allow_html=True)
+
+
+with tab_seo:
+    st.markdown("### SEO Deep Dive & User Journey")
+    st.markdown("Powered by Multi-Dimensional advanced API extractions.")
+    
+    # Load Advanced Data
+    ga4_adv = fetch_ga4_advanced()
+    gsc_adv = fetch_gsc_advanced()
+    
+    if not gsc_adv.empty and not ga4_adv.empty:
+        # 1. FUNNEL CHART
+        st.markdown("#### 1. The Growth Funnel (Impressions to Conversions)")
+        total_imp = gsc_adv['impressions'].sum()
+        total_clicks = gsc_adv['clicks'].sum()
+        total_sessions = ga4_adv['sessions'].sum()
+        total_conv = ga4_adv['conversions'].sum()
+        
+        fig_funnel = go.Figure(go.Funnel(
+            y=["GSC Impressions", "GSC Clicks", "GA4 Sessions", "GA4 Conversions"],
+            x=[total_imp, total_clicks, total_sessions, total_conv],
+            textposition="inside",
+            textinfo="value+percent initial",
+            marker={"color": ["#4285F4", "#34A853", "#FBBC05", "#EA4335"]}
+        ))
+        fig_funnel.update_layout(margin=dict(l=20, r=20, t=20, b=20))
+        st.plotly_chart(fig_funnel, use_container_width=True)
+        
+        # 2. STRIKING DISTANCE
+        st.markdown("#### 2. 'Striking Distance' Keywords (Positions 11-20)")
+        striking_df = gsc_adv[(gsc_adv['position'] >= 11) & (gsc_adv['position'] <= 25)].copy()
+        if not striking_df.empty:
+            # Group by query to aggregate
+            striking_agg = striking_df.groupby('query').agg({'impressions':'sum', 'clicks':'sum', 'position':'mean'}).reset_index()
+            # Top 50 by impressions
+            striking_agg = striking_agg.sort_values('impressions', ascending=False).head(50)
+            
+            fig_scatter = px.scatter(
+                striking_agg, x="position", y="impressions", size="impressions", color="clicks",
+                hover_name="query", size_max=40,
+                color_continuous_scale="Viridis",
+                title="Keywords on Page 2 or 3 with High Impressions (Need On-Page Optimization)"
+            )
+            # Invert X axis so rank 11 is on the left
+            fig_scatter.update_xaxes(autorange="reversed")
+            st.plotly_chart(fig_scatter, use_container_width=True)
+        else:
+            st.info("No striking distance keywords found (Positions 11-25).")
+
+        # 3. TRAFFIC COMPOSITION
+        st.markdown("#### 3. Traffic Composition")
+        colA, colB = st.columns(2)
+        with colA:
+            # Device Donut
+            device_agg = ga4_adv.groupby('device')['sessions'].sum().reset_index()
+            fig_donut = px.pie(device_agg, values='sessions', names='device', hole=0.5, title="Sessions by Device")
+            st.plotly_chart(fig_donut, use_container_width=True)
+        with colB:
+            # Channel Bar
+            channel_agg = ga4_adv.groupby('source')['sessions'].sum().reset_index().sort_values('sessions', ascending=False).head(10)
+            fig_bar = px.bar(channel_agg, x='source', y='sessions', title="Top 10 Sources by Sessions", color='sessions', color_continuous_scale="Blues")
+            st.plotly_chart(fig_bar, use_container_width=True)
+            
+        # 4. RAW DATA GRID WITH HIGHLIGHTS
+        st.markdown("#### 4. Actionable Data Grids")
+        st.markdown("**Content Decay Watchlist (Pages losing traffic):** *(Requires AI Phase 2 logic to fully calculate decay, showing raw top pages for now)*")
+        # Just show a stylized dataframe for now
+        page_agg = gsc_adv.groupby('landing_page').agg({'clicks':'sum', 'impressions':'sum', 'position':'mean'}).reset_index().sort_values('clicks', ascending=False).head(20)
+        st.dataframe(page_agg.style.background_gradient(subset=['clicks'], cmap='Greens').background_gradient(subset=['impressions'], cmap='Blues'))
+        
+    else:
+        st.info("Advanced data is still syncing from Google. Please wait a few minutes and refresh.")
+
 
 with tab2:
     st.header("Action Register")
