@@ -137,6 +137,7 @@ if __name__ == "__main__":
 
 def get_gsc_advanced_data(start_date="7daysAgo", end_date="today"):
     """Fetches multi-dimensional advanced SEO data: Date + Query + Page + Country + Device."""
+    from config.settings import get_google_credentials
     credentials = get_google_credentials()
     if credentials:
         try:
