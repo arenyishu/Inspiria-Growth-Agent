@@ -27,7 +27,7 @@ def get_gsc_data(start_date, end_date):
             'startDate': start_date, # Format: 'YYYY-MM-DD'
             'endDate': end_date,
             'dimensions': ['query', 'page'],
-            'rowLimit': 500 # Adjust as needed for the MVP
+            'rowLimit': 25000 # Adjust as needed for the MVP
         }
         
         response = service.searchanalytics().query(
@@ -69,7 +69,7 @@ def get_gsc_daily_data(start_date, end_date):
                 'startDate': start_date,
                 'endDate': end_date,
                 'dimensions': ['date'], # Group by date instead of query/page
-                'rowLimit': 10000
+                'rowLimit': 25000
             }
             
             response = service.searchanalytics().query(siteUrl=GSC_SITE_URL, body=request).execute()
@@ -102,7 +102,7 @@ def get_gsc_queries_data(start_date, end_date):
                 'startDate': start_date,
                 'endDate': end_date,
                 'dimensions': ['date', 'query'],
-                'rowLimit': 5000
+                'rowLimit': 25000
             }
             
             response = service.searchanalytics().query(siteUrl=GSC_SITE_URL, body=request).execute()

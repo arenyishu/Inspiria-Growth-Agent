@@ -34,6 +34,7 @@ def get_ga4_data(start_date="7daysAgo", end_date="today"):
                 Metric(name="screenPageViews")
             ],
             date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+            limit=100000,
         )
 
         response = client.run_report(request)
@@ -75,6 +76,7 @@ def get_ga4_daily_data(start_date, end_date):
                     Metric(name="screenPageViews")
                 ],
                 date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                limit=100000,
             )
 
             response = client.run_report(request)
@@ -112,6 +114,7 @@ def get_ga4_channels_data(start_date, end_date):
                     Metric(name="sessions")
                 ],
                 date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
+                limit=100000,
             )
 
             response = client.run_report(request)
