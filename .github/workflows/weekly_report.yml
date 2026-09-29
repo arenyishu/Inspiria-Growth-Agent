@@ -34,5 +34,6 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_JSON }}
           SEMRUSH_API_KEY: ${{ secrets.SEMRUSH_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPED_API_KEY }}
         run: |
           python scripts/weekly_cron.py
