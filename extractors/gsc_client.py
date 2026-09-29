@@ -77,10 +77,12 @@ def get_gsc_daily_data(start_date, end_date):
             data = []
             if 'rows' in response:
                 for row in response['rows']:
-                    data.append({
+                                        data.append({
                         "date": row['keys'][0],
                         "clicks": row['clicks'],
-                        "impressions": row['impressions']
+                        "impressions": row['impressions'],
+                        "ctr": row.get('ctr', 0.0),
+                        "position": row.get('position', 0.0)
                     })
                     
             return pd.DataFrame(data)

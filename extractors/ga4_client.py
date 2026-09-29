@@ -73,7 +73,9 @@ def get_ga4_daily_data(start_date, end_date):
                     Metric(name="sessions"),
                     Metric(name="activeUsers"),
                     Metric(name="conversions"),
-                    Metric(name="screenPageViews")
+                    Metric(name="screenPageViews"),
+                    Metric(name="bounceRate"),
+                    Metric(name="averageSessionDuration")
                 ],
                 date_ranges=[DateRange(start_date=start_date, end_date=end_date)],
                 limit=100000,
@@ -91,7 +93,9 @@ def get_ga4_daily_data(start_date, end_date):
                     "sessions": int(row.metric_values[0].value),
                     "active_users": int(row.metric_values[1].value),
                     "conversions": int(float(row.metric_values[2].value)),
-                    "pageviews": int(row.metric_values[3].value)
+                    "pageviews": int(row.metric_values[3].value),
+                    "bounce_rate": float(row.metric_values[4].value),
+                    "avg_time_on_page": float(row.metric_values[5].value)
                 })
                 
             return pd.DataFrame(data)
