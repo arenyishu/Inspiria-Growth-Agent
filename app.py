@@ -560,10 +560,7 @@ with tab_ccc:
         from database.db_manager import get_connection
         import pandas as pd
         
-        # We need SQLAlchemy engine for pandas
-        from config.settings import SUPABASE_URI
-        from sqlalchemy import create_engine
-        engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+        conn = get_connection()
         
         with st.spinner("Merging GSC Traffic with SEMrush Technical Data..."):
             query = """
@@ -581,7 +578,8 @@ with tab_ccc:
                 ORDER BY total_impressions DESC
                 LIMIT 500
             """
-            merged_df = pd.read_sql_query(query, engine)
+            merged_df = pd.read_sql_query(query, conn)
+            conn.close()
             
             if not merged_df.empty:
                 st.subheader("Unified Data Lake (Top 500 Pages by Search Impressions)")
