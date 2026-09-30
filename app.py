@@ -842,4 +842,38 @@ with tab5:
             except Exception as e:
                 st.error(f"Error: {e}")
 
+    # 5. GA4 Fallback
+    with st.expander("📊 Google Analytics 4 (Fallback)"):
+        st.write("Upload your GA4 export (columns: date, sessions, totalUsers, activeUsers, screenPageViews). Note: This is usually automatically fetched via API.")
+        up_ga4 = st.file_uploader("Upload GA4 CSV", type="csv", key="up_ga4")
+        if up_ga4:
+            try:
+                df_ga4 = safe_read_csv(up_ga4)
+                st.write("**Data Preview:**")
+                st.dataframe(df_ga4.head())
+                if st.button("Submit to Database", key="btn_ga4"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_ga4.to_sql('ga4_daily', engine, if_exists='append', index=False)
+                            st.success(f"Successfully saved {len(df_ga4)} rows!")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+    # 6. GSC Fallback
+    with st.expander("🔍 Google Search Console (Fallback)"):
+        st.write("Upload your GSC export (columns: date, query, landing_page, country, device, clicks, impressions, ctr, position). Note: This is usually automatically fetched via API.")
+        up_gsc = st.file_uploader("Upload GSC CSV", type="csv", key="up_gsc")
+        if up_gsc:
+            try:
+                df_gsc = safe_read_csv(up_gsc)
+                st.write("**Data Preview:**")
+                st.dataframe(df_gsc.head())
+                if st.button("Submit to Database", key="btn_gsc"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_gsc.to_sql('gsc_advanced_report', engine, if_exists='append', index=False)
+                            st.success(f"Successfully saved {len(df_gsc)} rows!")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
 # End of app
