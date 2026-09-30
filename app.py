@@ -760,11 +760,16 @@ with tab5:
     
     import pandas as pd
     from sqlalchemy import create_engine
-    from config.settings import SUPABASE_URI
+    import os
     
     # We use a direct engine for pandas to_sql
     try:
-        engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+        if "SUPABASE_URI" in st.secrets:
+            db_uri = st.secrets["SUPABASE_URI"]
+        else:
+            db_uri = os.getenv("SUPABASE_URI", "")
+            
+        engine = create_engine(db_uri.replace("postgresql://", "postgresql+psycopg2://"))
     except Exception as e:
         engine = None
         st.error("Could not connect to database engine.")
