@@ -134,8 +134,9 @@ with tab1:
     p_pv = get_totals(ga4_prev, 'pageviews')
     chg_pv = calculate_percentage_change(c_pv, p_pv)
 
-    c_reach = get_totals(social_cur, 'daily_reach')
-    p_reach = get_totals(social_prev, 'daily_reach')
+    # Calculate Social Sessions directly from GA4 instead of manual uploads
+    c_reach = ga4_channels_cur[ga4_channels_cur['channel'].str.contains('Social', case=False, na=False)]['sessions'].sum() if not ga4_channels_cur.empty else 0
+    p_reach = ga4_channels_prev[ga4_channels_prev['channel'].str.contains('Social', case=False, na=False)]['sessions'].sum() if not ga4_channels_prev.empty else 0
     chg_reach = calculate_percentage_change(c_reach, p_reach)
 
     c_q_leads = len(crm_cur[crm_cur['qualified'].str.lower() == 'yes']) if not crm_cur.empty and 'qualified' in crm_cur.columns else 0
@@ -198,7 +199,7 @@ with tab1:
 {format_row('Qualified Leads', c_q_leads, p_q_leads, chg_q_leads, t_q_leads)}
 {format_row('Website Sessions', c_sess, p_sess, chg_sess, t_sess)}
 {format_row('Organic Clicks', c_clicks, p_clicks, chg_clicks, t_clicks)}
-{format_row('Social Reach', c_reach, p_reach, chg_reach, t_reach)}
+{format_row('Social Media Sessions', c_reach, p_reach, chg_reach, t_reach)}
 </table>
 </div>
     """, unsafe_allow_html=True)
@@ -266,7 +267,7 @@ with tab1:
     st.markdown("<br><h2 style='font-size: 20px; color: var(--text-color); margin-bottom: 20px;'>The Marketing Funnel</h2>", unsafe_allow_html=True)
     funnel_data = dict(
         number=[c_reach + c_imp, c_clicks, c_sess, c_users],
-        stage=["Top of Funnel (Awareness: Social Reach + Search Impressions)", "Middle of Funnel (Interest: Search Clicks)", "Website Traffic (GA4 Sessions)", "Bottom of Funnel (GA4 Active Users)"]
+        stage=["Top of Funnel (Awareness: Social Sessions + Search Impressions)", "Middle of Funnel (Interest: Search Clicks)", "Website Traffic (GA4 Sessions)", "Bottom of Funnel (GA4 Active Users)"]
     )
     if funnel_data['number'][0] > 0:
         fig_funnel = px.funnel(funnel_data, x='number', y='stage')
@@ -711,11 +712,12 @@ with tab4:
     st.subheader("Google Search Console (Organic Search)")
     st.dataframe(gsc_cur)
     
-    st.subheader("Social Media (Meta / LinkedIn)")
-    if not social_cur.empty:
-        st.dataframe(social_cur)
+    st.subheader("Social Media (Automated via GA4)")
+    social_traffic = ga4_channels_cur[ga4_channels_cur['channel'].str.contains('Social', case=False, na=False)] if not ga4_channels_cur.empty else None
+    if social_traffic is not None and not social_traffic.empty:
+        st.dataframe(social_traffic)
     else:
-        st.info("No Social Media data available for this period. Upload data in the Data Ingestion tab.")
+        st.info("No Organic Social traffic recorded in GA4 for this period.")
 
     st.subheader("SEMrush (Technical Site Audit)")
     try:
@@ -756,50 +758,7 @@ with tab5:
     st.header("Data Ingestion")
     st.write("Upload your exported CSV data files to securely push them to the Supabase Data Warehouse.")
     
-    with st.expander("📊 Google Analytics 4 (Website Traffic)"):
-        st.write("Upload your GA4 export (columns: date, sessions, active_users, pageviews, conversions).")
-        up_ga4 = st.file_uploader("Upload GA4 CSV", type="csv", key="up_ga4")
-        if up_ga4:
-            try:
-                import pandas as pd
-                df = safe_read_csv(up_ga4)
-                st.dataframe(df.head())
-                if st.button("Save GA4 to Database", type="primary", key="btn_ga4"):
-                    from database.db_manager import upsert_ga4_data
-                    upsert_ga4_data(df)
-                    st.success("GA4 Data warehoused!")
-            except Exception as e:
-                st.error(f"Error: {e}")
-
-    with st.expander("🔍 Google Search Console (SEO)"):
-        st.write("Upload your GSC export (columns: date, clicks, impressions).")
-        up_gsc = st.file_uploader("Upload GSC CSV", type="csv", key="up_gsc")
-        if up_gsc:
-            try:
-                import pandas as pd
-                df = safe_read_csv(up_gsc)
-                st.dataframe(df.head())
-                if st.button("Save GSC to Database", type="primary", key="btn_gsc"):
-                    from database.db_manager import upsert_gsc_data
-                    upsert_gsc_data(df)
-                    st.success("GSC Data warehoused!")
-            except Exception as e:
-                st.error(f"Error: {e}")
-
-    with st.expander("📱 Social Media (Meta / LinkedIn)"):
-        st.write("Upload your Social Media export (columns: date, followers, reach, engagement).")
-        up_soc = st.file_uploader("Upload Social CSV", type="csv", key="up_soc")
-        if up_soc:
-            try:
-                import pandas as pd
-                df = safe_read_csv(up_soc)
-                st.dataframe(df.head())
-                if st.button("Save Social to Database", type="primary", key="btn_soc"):
-                    from database.db_manager import upsert_social_data
-                    upsert_social_data(df)
-                    st.success("Social Data warehoused!")
-            except Exception as e:
-                st.error(f"Error: {e}")
+    
 
     with st.expander("📈 SEMrush (SEO & Authority)"):
         st.write("Upload your SEMrush export (columns: date, authority_score, total_backlinks, referring_domains, organic_keywords, traffic_cost).")
