@@ -755,37 +755,86 @@ def safe_read_csv(file_obj):
     return df
 
 with tab5:
-    st.header("Data Ingestion")
-    st.write("Upload your exported CSV data files to securely push them to the Supabase Data Warehouse.")
+    st.header("Universal Data Ingestion Hub")
+    st.write("Upload your exported CSV data files to securely push them to the Supabase Data Warehouse. The system will preview your data before saving.")
     
+    import pandas as pd
+    from sqlalchemy import create_engine
+    from config.settings import SUPABASE_URI
     
+    # We use a direct engine for pandas to_sql
+    try:
+        engine = create_engine(SUPABASE_URI.replace("postgresql://", "postgresql+psycopg2://"))
+    except Exception as e:
+        engine = None
+        st.error("Could not connect to database engine.")
 
-    with st.expander("📈 SEMrush (SEO & Authority)"):
-        st.write("Upload your SEMrush export (columns: date, authority_score, total_backlinks, referring_domains, organic_keywords, traffic_cost).")
-        up_sem = st.file_uploader("Upload SEMrush CSV", type="csv", key="up_sem")
+    # 1. SEMrush Site Audit
+    with st.expander("🛠️ SEMrush (Technical Site Audit)"):
+        st.write("Upload your SEMrush Site Audit export (updates the Content Command Center).")
+        up_audit = st.file_uploader("Upload Site Audit CSV", type="csv", key="up_audit")
+        if up_audit:
+            try:
+                df_audit = safe_read_csv(up_audit)
+                st.write("**Data Preview:**")
+                st.dataframe(df_audit.head())
+                if st.button("Submit to Database", key="btn_audit"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_audit.to_sql('semrush_site_audit', engine, if_exists='replace', index=False)
+                            st.success(f"Successfully saved {len(df_audit)} rows!")
+            except Exception as e:
+                st.error(f"Error reading file: {e}")
+
+    # 2. SEMrush Domain Authority
+    with st.expander("📈 SEMrush (Domain Authority)"):
+        st.write("Upload your SEMrush Domain Overview (columns: date, authority_score, total_backlinks, organic_keywords).")
+        up_sem = st.file_uploader("Upload Domain CSV", type="csv", key="up_sem")
         if up_sem:
             try:
-                import pandas as pd
-                df = safe_read_csv(up_sem)
-                st.dataframe(df.head())
-                if st.button("Save SEMrush to Database", type="primary", key="btn_sem"):
-                    from database.db_manager import upsert_semrush_data
-                    upsert_semrush_data(df)
-                    st.success("SEMrush Data warehoused!")
+                df_sem = safe_read_csv(up_sem)
+                st.write("**Data Preview:**")
+                st.dataframe(df_sem.head())
+                if st.button("Submit to Database", key="btn_sem"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_sem.to_sql('semrush_daily', engine, if_exists='append', index=False)
+                            st.success(f"Successfully saved {len(df_sem)} rows!")
             except Exception as e:
                 st.error(f"Error: {e}")
-                
+
+    # 3. Social Media Native
+    with st.expander("📱 Social Media (Native Metrics)"):
+        st.write("Upload native social metrics (columns: date, reach, impressions, followers, engagement).")
+        up_soc = st.file_uploader("Upload Social CSV", type="csv", key="up_soc")
+        if up_soc:
+            try:
+                df_soc = safe_read_csv(up_soc)
+                st.write("**Data Preview:**")
+                st.dataframe(df_soc.head())
+                if st.button("Submit to Database", key="btn_soc"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_soc.to_sql('social_daily', engine, if_exists='append', index=False)
+                            st.success(f"Successfully saved {len(df_soc)} rows!")
+            except Exception as e:
+                st.error(f"Error: {e}")
+
+    # 4. CRM Pipeline
     with st.expander("💼 CRM Conversions (Pipeline)"):
-        st.write("Upload your CRM export (columns: conversion_id, date, landing_page, source, qualified, customer, revenue).")
+        st.write("Upload your sales pipeline (columns: date, source, total_leads, qualified_leads, enrolled_students, revenue).")
         up_crm = st.file_uploader("Upload CRM CSV", type="csv", key="up_crm")
         if up_crm:
             try:
-                import pandas as pd
-                df = safe_read_csv(up_crm)
-                st.dataframe(df.head())
-                if st.button("Save CRM to Pipeline", type="primary", key="btn_crm"):
-                    from database.db_manager import upsert_crm_conversions
-                    upsert_crm_conversions(df)
-                    st.success("CRM Data warehoused!")
+                df_crm = safe_read_csv(up_crm)
+                st.write("**Data Preview:**")
+                st.dataframe(df_crm.head())
+                if st.button("Submit to Database", key="btn_crm"):
+                    with st.spinner("Saving to database..."):
+                        if engine:
+                            df_crm.to_sql('crm_pipeline', engine, if_exists='append', index=False)
+                            st.success(f"Successfully saved {len(df_crm)} rows!")
             except Exception as e:
                 st.error(f"Error: {e}")
+
+# End of app
